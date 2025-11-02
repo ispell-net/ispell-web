@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-11-01 00:08:20
- * @LastEditTime: 2025-11-01 11:25:18
+ * @LastEditTime: 2025-11-02 22:59:18
  * @Description: 第三方OAuth登录自定义Hook
  */
 
@@ -21,7 +21,7 @@ import { Tokens, User } from '@/types/auth.types';
  * @param translateAndSetApiError - 错误信息翻译并设置的方法
  */
 type UseOAuthProps = {
-  login: (user: User, tokens: Tokens) => void; // 登录成功回调：接收用户信息和令牌
+  login: (user: User, tokens: Tokens, rememberMe: boolean) => void; // 登录成功回调：接收用户信息和令牌
   closeModal: () => void; // 关闭当前登录弹窗
   setIsLoading: (loading: boolean) => void; // 控制登录按钮加载状态
   translateAndSetApiError: (message: string | null) => void; // 处理并显示错误信息
@@ -54,7 +54,7 @@ export const useOAuth = ({
 
       // 处理登录成功：调用全局登录方法更新状态，关闭弹窗
       if (type && type.endsWith('-login-success')) {
-        login(user, { accessToken, refreshToken });
+        login(user, { accessToken, refreshToken }, false);
         closeModal();
       }
       // 处理登录失败：传递错误信息并显示

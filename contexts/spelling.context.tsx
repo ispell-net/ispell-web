@@ -157,8 +157,7 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
         const plan =
           action === 'reset' ? currentPlan.plan : (action as PlanDetails);
         const totalWords = currentPlan.book.totalWords;
-        const progress = currentPlan.progress;
-        const remainingNewWords = progress.totalNewCount || totalWords;
+        const remainingNewWords = 0 || totalWords;
 
         if (plan.type === 'customWords' && plan.value > 0) {
           dueNewCount = Math.min(plan.value, remainingNewWords);
@@ -216,10 +215,10 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
         console.log(
           `[Spelling Context] Loaded ${data.length} words for session.`
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('加载学习单词失败:', error);
         endLearningSession();
-        toast.error(error.message || '加载今日单词列表失败。');
+        toast.error((error as Error).message || '加载今日单词列表失败。');
       }
     },
     [endLearningSession, startTimer, setHasMadeMistake, learningList] // [!!!] 依赖最新的 learningList
@@ -271,7 +270,6 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
     const word = words[currentIndex];
     if (!word) return;
     setFailedWordsInSession((prevFailed) => {
-      // @ts-ignore
       if (prevFailed.find((w) => w.progressId === word.progressId)) {
         return prevFailed;
       }
@@ -325,21 +323,19 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
   const updateWordProgressInContext = useCallback(
     async (quality: number) => {
       const word = words[currentIndex];
-      // @ts-ignore
       if (!word || !word.progressId) {
         console.error('无法更新进度：缺少 word 或 progressId');
         return;
       }
-      // @ts-ignore
       const progressId = word.progressId as number;
       try {
         console.log(
           `[Spelling Context] Updating progress for ID ${progressId}, quality ${quality}`
         );
         await updateWordProgress(progressId, quality);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('后台同步单词进度失败:', error);
-        toast.error(`同步进度失败: ${error.message}`, { duration: 2000 });
+        toast.error(`同步进度失败: ${(error as Error).message}`, { duration: 2000 });
       }
     },
     [words, currentIndex]
@@ -384,9 +380,9 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
       //   setWords([]);
       //   setIsSessionComplete(false);
       // }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('推进章节失败:', error);
-      toast.error(error.message || '开启新章节失败。');
+      toast.error((error as Error).message || '开启新章节失败。');
     }
   }, [
     currentBookId,
@@ -433,8 +429,6 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
     currentWord,
     stats,
     displayMode,
-    // @ts-ignore
-    isMaskActive: false,
     speechConfig,
     speechSupported,
     isCustomSpeech,
@@ -445,8 +439,6 @@ export const SpellingProvider = ({ children }: SpellingProviderProps) => {
     startTimer,
     incrementInputCount,
     incrementCorrectCount,
-    // @ts-ignore
-    setIsMaskActive: () => {},
     setSpeechConfig,
     setDisplayMode,
     setIsCustomSpeech,

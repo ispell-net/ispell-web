@@ -1,7 +1,7 @@
 'use client';
 /*
  * @Date: 2025-10-28 22:05:53
- * @LastEditTime: 2025-11-01 11:20:59
+ * @LastEditTime: 2025-11-02 22:55:12
  * @Description: 实现记住我功能，区分会话级/持久化存储
  */
 import React, {
@@ -133,9 +133,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setCurrentBookId(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('加载全局数据失败:', err);
-      setDataError(err.message || '无法加载数据，请稍后重试。');
+      setDataError((err as Error).message || '无法加载数据，请稍后重试。');
     } finally {
       setIsDataLoading(false);
     }
@@ -171,7 +171,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // --- 登录逻辑（核心修改：根据rememberMe选择存储方式） ---
   const login = useCallback(
-    (userData: User, tokens: ITokens, rememberMe: boolean) => {
+    (userData: User, tokens: Tokens, rememberMe: boolean) => {
       setUser(userData);
       setAccessToken(tokens.accessToken);
       // 勾选"记住我"用localStorage（持久化），否则用sessionStorage（会话级）
@@ -266,7 +266,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (accessToken) {
       console.log('[AppContext] AccessToken 变化，正在加载在学列表...');
       setIsDataLoading(true);
-      fetchLearningList(accessToken)
+      fetchLearningList()
         .then((learningData) => {
           setLearningList(learningData);
           const activePlan = learningData.find((p) => p.isCurrent);

@@ -27,32 +27,6 @@ const ThirdPartyLogins: React.FC<ThirdPartyLoginsProps> = ({
         </span>
       </div>
       <div className="mt-6 flex justify-center space-x-4">
-        {/* 微信按钮 */}
-        <button
-          onClick={() => handleOAuthClick('wechat', 600, 550)}
-          disabled={isLoading}
-          className="rounded-full border border-gray-300 p-2.5 text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          <img
-            src="/images/social/wechat.svg"
-            alt={t_alt('wechat')}
-            className="h-5 w-5"
-          />
-        </button>
-
-        {/* QQ 按钮 */}
-        <button
-          onClick={() => handleOAuthClick('qq', 600, 500)}
-          disabled={isLoading}
-          className="rounded-full border border-gray-300 p-2.5 text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          <img
-            src="/images/social/qq.svg"
-            alt={t_alt('qq')}
-            className="h-5 w-5"
-          />
-        </button>
-
         {/* Google 按钮 */}
         <button
           onClick={() => handleOAuthClick('google', 600, 700)}

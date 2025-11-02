@@ -104,7 +104,7 @@ export default function BookSelectionDrawer() {
     if (!previewBook || !accessToken) return;
     const loadingToastId = toast.loading('正在创建计划...');
     try {
-      await savePlan(previewBook.listCode, plan, accessToken);
+      await savePlan(previewBook.listCode, plan);
       loadBook(previewBook.listCode, plan);
       await refreshAllData();
       toast.dismiss(loadingToastId);
@@ -125,7 +125,7 @@ export default function BookSelectionDrawer() {
     if (!accessToken) return;
     const loadingToastId = toast.loading('正在更新计划...');
     try {
-      await savePlan(book.listCode, plan, accessToken);
+      await savePlan(book.listCode, plan);
       await refreshAllData();
       setPreviewBook(null);
       toast.dismiss(loadingToastId);
@@ -145,7 +145,7 @@ export default function BookSelectionDrawer() {
     const oldBookId = currentBookId;
 
     try {
-      await activatePlan(planId, accessToken);
+      await activatePlan(planId);
       setCurrentBookId(listCode);
       loadBook(listCode, 'activate');
       await refreshAllData();
@@ -176,7 +176,7 @@ export default function BookSelectionDrawer() {
     if (modalState?.type !== 'reset' || !accessToken) return;
     const loadingToastId = toast.loading('正在重置进度...');
     try {
-      await resetPlan(modalState.planId, accessToken);
+      await resetPlan(modalState.planId);
       await refreshAllData();
       toast.dismiss(loadingToastId);
       toast.success('学习进度已重置');
@@ -201,7 +201,7 @@ export default function BookSelectionDrawer() {
     const loadingToastId = toast.loading('正在取消学习...');
 
     try {
-      await deletePlan(planId, accessToken);
+      await deletePlan(planId);
       await refreshAllData();
       if (currentBookId === bookToCancel) {
         setCurrentBookId(null);

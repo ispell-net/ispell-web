@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 09:55:11
- * @LastEditTime: 2025-11-01 11:43:33
+ * @LastEditTime: 2025-11-02 22:58:39
  * @Description: 单词学习相关类型定义
  */
 
@@ -77,6 +77,7 @@ export interface Relations {
  * 包含单词的基本信息、发音、释义、例句及词语关系
  */
 export interface Word {
+  progressId: number;
   id: number; // 单词唯一ID（后端自增）
   pronunciation: Pronunciation; // 发音信息（英式/美式）
   definitions: Definition[]; // 释义列表（按词性分组）

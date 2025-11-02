@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 /**
  * 登录弹窗组件
@@ -204,8 +204,18 @@ const LoginModal: React.FC = () => {
     const payload = {
       emailOrPhone,
       mode,
-      password: mode === 'password' ? validation.data.password : undefined,
-      code: mode === 'code' ? validation.data.code : undefined,
+      password:
+        mode === 'password'
+          ? 'password' in validation.data
+            ? validation.data.password
+            : undefined
+          : undefined,
+      code:
+        mode === 'code'
+          ? 'code' in validation.data
+            ? validation.data.code
+            : undefined
+          : undefined,
     };
 
     try {
@@ -356,7 +366,7 @@ const LoginModal: React.FC = () => {
               {rememberMe ? (
                 <CheckSquare className="h-4 w-4 text-gray-900 dark:text-white" />
               ) : (
-                <Square className="h-4 w-4 text-gray-400" />
+                <Square className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               )}
               <span>{t('rememberMe')}</span>
             </button>
@@ -381,7 +391,7 @@ const LoginModal: React.FC = () => {
               {agreePolicy ? (
                 <CheckSquare className="h-4 w-4 text-gray-900 dark:text-white" />
               ) : (
-                <Square className="h-4 w-4 text-gray-400" />
+                <Square className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               )}
               <span>
                 {t('agreePolicyPrefix')}
@@ -462,7 +472,7 @@ const LoginModal: React.FC = () => {
 
         {/* 注册入口：引导新用户跳转注册 */}
         <div>
-          <p className="pt-1 text-center text-sm text-gray-500">
+          <p className="pt-1 text-center text-sm text-gray-500 dark:text-gray-400">
             {t('newUserHint')}{' '}
             <button
               onClick={switchToRegister}

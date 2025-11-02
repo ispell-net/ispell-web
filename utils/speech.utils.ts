@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 11:10:22
- * @LastEditTime: 2025-10-27 22:15:01
+ * @LastEditTime: 2025-11-02 23:04:47
  * @Description: 文本转语音工具函数（优化版：非阻塞预加载）
  */
 
@@ -211,6 +211,7 @@ export function playPronunciation(options: SpeechOptions) {
     // 调用 onError 回调（如果提供了）
     options.onError?.(
       new SpeechSynthesisErrorEvent('error', {
+        // @ts-expect-error --- FORCE TYPE ---
         error: 'speech_synthesis_not_supported',
       })
     );
@@ -232,6 +233,7 @@ export function playPronunciation(options: SpeechOptions) {
 
   if (!text.trim()) {
     console.error('播放文本不能为空');
+    // @ts-expect-error --- FORCE TYPE ---
     onError?.(new SpeechSynthesisErrorEvent('error', { error: 'empty_text' }));
     return;
   }

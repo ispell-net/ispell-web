@@ -75,7 +75,8 @@ export const useSpeechPlayer = () => {
         const event =
           error instanceof SpeechSynthesisErrorEvent
             ? error
-            : new SpeechSynthesisErrorEvent('error', { error: errorMessage });
+            : // @ts-expect-error --- FORCE TYPE ---
+              new SpeechSynthesisErrorEvent('error', { error: errorMessage });
         options.onError?.(event);
       };
 
@@ -109,8 +110,7 @@ export const useSpeechPlayer = () => {
       audio.onended = internalOnEnd;
 
       audio.onerror = (e) => {
-        // console.error('API Audio failed, falling back to browser TTS:', e);
-        // Fallback (需求)
+        // @ts-expect-error --- FORCE TYPE ---
         internalOnError(e, 'api_failed_fallback');
 
         // 回退到浏览器发音

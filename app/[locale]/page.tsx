@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-23 09:38:39
- * @LastEditTime: 2025-11-01 18:28:20
- * @Description: 拼写学习主页面组件
+ * @LastEditTime: 2025-11-02 22:01:14
+ * @Description: 拼写学习主页面组件 (已移除顶部边距)
  */
 'use client';
 
@@ -47,28 +47,27 @@ function Content() {
 
   return (
     <>
-      
-
-        {/* 主内容区：根据会话状态调整布局 */}
-        <div
-          className={`w-full flex flex-col items-center flex-1 mt-12 sm:mt-16 ${
-            isLearningSessionActive ? 'justify-between' : 'justify-center'
-          }`}
-        >
-          {/* 学习会话激活时：显示导航、单词展示、统计卡片 */}
-          {isLearningSessionActive ? (
-            isSessionComplete ? null : ( // 会话完成时不显示学习组件
-              <>
-                <WordNavigation />
-                <WordDisplay />
-                <StatsCard />
-              </>
-            )
-          ) : (
-            // 学习会话未激活时：显示学习开始组件（引导用户启动学习）
-            <LearningStart />
-          )}
-        </div>
+      {/* 主内容区：根据会话状态调整布局 */}
+      <div
+        className={`w-full flex flex-col items-center flex-1 ${
+          // <-- 修改点：移除了 mt-12 sm:mt-16
+          isLearningSessionActive ? 'justify-between' : 'justify-center'
+        }`}
+      >
+        {/* 学习会话激活时：显示导航、单词展示、统计卡片 */}
+        {isLearningSessionActive ? (
+          isSessionComplete ? null : ( // 会话完成时不显示学习组件
+            <>
+              <WordNavigation />
+              <WordDisplay />
+              <StatsCard />
+            </>
+          )
+        ) : (
+          // 学习会话未激活时：显示学习开始组件（引导用户启动学习）
+          <LearningStart />
+        )}
+      </div>
 
       {/* 全局浮动组件：设置面板、书籍选择抽屉 */}
       <Settings />
