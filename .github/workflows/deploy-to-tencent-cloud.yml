@@ -17,14 +17,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build project (服务端渲染，生成.next目录)
         run: npm run build
 
-      - name: Deploy to Tencent Cloud DevOps
+      - name: Deploy to Tencent Cloud
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
@@ -34,11 +35,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y sshpass
-          echo "===== 环境变量列表 ====="
-          echo "===== 调试输出 ====="
-          echo "SERVER_PORT: '$SERVER_PORT'"
-          echo "SERVER_USER: '$SERVER_USER'"
-          echo "SERVER_IP: '$SERVER_IP'"
-          echo "REMOTE_DIR: '$REMOTE_DIR'"
-          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no -r -P "$SERVER_PORT" dist/* "$SERVER_USER@$SERVER_IP:$REMOTE_DIR"
-          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no -p "$SERVER_PORT" "$SERVER_USER@$SERVER_IP" "cd $REMOTE_DIR"
+
+          # 上传服务端渲染所需文件（.next目录、依赖配置）
+          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no -r -P "$SERVER_PORT" .next package.json package-lock.json "$SERVER_USER@$SERVER_IP:$REMOTE_DIR"
+
+          # 在服务器安装依赖并启动服务（使用pm2后台运行）
+          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no -p "$SERVER_PORT" "$SERVER_USER@$SERVER_IP" "
+            cd $REMOTE_DIR &&
+            npm install --production && # 安装生产依赖
+            npm install -g pm2 && # 安装进程管理工具（首次部署需要，后续可省略）
+            pm2 restart nextjs-app || pm2 start npm --name 'nextjs-app' -- start # 重启或启动服务
+          "
