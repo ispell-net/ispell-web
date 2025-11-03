@@ -1,11 +1,11 @@
 /*
  * @Date: 2025-11-01 00:07:06
- * @LastEditTime: 2025-11-01 11:35:17
+ * @LastEditTime: 2025-11-03 09:28:24
  * @Description: 认证相关 API 服务
  */
 
 import { z } from 'zod';
-import apiClient from '@/utils/api.utils';
+import apiClient, { API_URL } from '@/utils/api.utils';
 import { handleApiError } from '@/utils/error.utils';
 import { User } from '@/types/auth.types';
 
@@ -13,8 +13,6 @@ import { User } from '@/types/auth.types';
 export type TErrorFunction = (key: string) => string;
 
 // --- 常量定义 ---
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
 export const EXPECTED_OAUTH_ORIGIN = new URL(API_URL).origin;
 export const COUNTDOWN_TIMESTAMP_KEY = 'ispell_code_timestamp';
 export const COUNTDOWN_SECONDS = 60;
