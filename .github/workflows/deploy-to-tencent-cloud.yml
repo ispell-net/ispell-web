@@ -26,10 +26,18 @@ jobs:
 
       - name: 5. Archive production files
         run: |
-          # 我们只打包运行在服务器上所必需的文件
-          # 我们排除了 node_modules，因为它将在服务器上重新安装
-          tar -czf deploy.tar.gz .next public package.json package-lock.json next.config.mjs next.config.js
-        # 注意: 上一行我同时包含了 next.config.mjs 和 next.config.js，它会自动打包存在的那一个
+          echo "Archiving files for deployment..."
+          # 使用 --ignore-failed-read 选项
+          # 这样即使 .mjs 或 .js 文件不存在，tar 也不会报错
+          tar -czf deploy.tar.gz \
+            --ignore-failed-read \
+            .next \
+            public \
+            package.json \
+            package-lock.json \
+            next.config.js \
+            next.config.mjs \
+            next.config.ts
 
       - name: 6. Deploy to Tencent Cloud
         env:
@@ -52,17 +60,18 @@ jobs:
             # 进入项目目录
             cd $REMOTE_DIR
             
-            # 解压文件，--strip-components=0 确保文件解压在当前目录
+            # 解压文件
             tar -xzf deploy.tar.gz
             
             # 删除压缩包，保持目录干净
             rm deploy.tar.gz
             
-            # 安装生产环境依赖 (不安装 devDependencies)
-            npm install --production
+            # 关键：运行 'npm install' 来安装所有依赖 (包括 typescript)
+            # 否则 'next start' 无法读取 'next.config.ts'
+            echo 'Installing ALL dependencies (including devDependencies for .ts config)...'
+            npm install
             
             # 重新加载 PM2 进程。宝塔会通过 PM2 管理你的 Node 项目
-            # 这是实现 "无缝热重载" 的关键
             echo 'Restarting PM2 process: $PM2_APP_NAME'
             pm2 reload $PM2_APP_NAME
           "
