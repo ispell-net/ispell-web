@@ -2,16 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  Star,
-  MoreHorizontal,
-  RotateCcw,
-  Trash2,
-  ListTree, // 1. 导入新图标
-} from 'lucide-react';
+import { X, Star } from 'lucide-react';
 import { useAppContext } from '@/contexts/app.context';
-import type { Book, Category, Language, PlanDetails } from '@/types/book.types';
+import type { Book, PlanDetails } from '@/types/book.types';
 import {
   savePlan,
   deletePlan,
@@ -24,9 +17,9 @@ import toast from 'react-hot-toast';
 import BrowserView from './BrowserView';
 import LearningView from './LearningView';
 import ConfirmationModal from '../common/ConfirmationModal';
-import PlanWordsModal from './PlanWordsModal'; // 2. 导入新模态框
+import PlanWordsModal from './PlanWordsModal';
 
-// 辅助函数
+// 辅助函数：将数组按指定大小分片
 function chunk<T>(arr: T[], size: number): T[][] {
   if (size <= 0) throw new Error('Chunk size must be greater than 0');
   const result: T[][] = [];
@@ -36,6 +29,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return result;
 }
 
+// 复习策略名称映射
 const reviewStrategyNames: { [key: string]: string } = {
   NONE: '不复习',
   EBBINGHAUS: '艾宾浩斯',
@@ -43,13 +37,14 @@ const reviewStrategyNames: { [key: string]: string } = {
   LEITNER: '莱布尼茨',
 };
 
+// 确认弹窗状态类型
 type ModalState = {
   type: 'reset' | 'cancel';
   planId: number;
   bookName: string;
 };
 
-// 3. 为新模态框添加状态类型
+// 计划单词模态框状态类型
 type PlanWordsModalState = {
   planId: number;
   bookName: string;
@@ -69,6 +64,7 @@ export default function BookSelectionDrawer() {
     refreshAllData,
     isBookDrawerOpen,
     setIsBookDrawerOpen,
+    isLoggedIn, // 新增：获取登录状态
   } = useAppContext();
 
   // 内部状态
@@ -78,15 +74,13 @@ export default function BookSelectionDrawer() {
   const [activeSeriesId, setActiveSeriesId] = useState('');
   const [openMenu, setOpenMenu] = useState<number | null>(null);
   const [modalState, setModalState] = useState<ModalState | null>(null);
-
-  // 4. 添加新模态框的状态
   const [planWordsModalState, setPlanWordsModalState] =
     useState<PlanWordsModalState | null>(null);
 
   const isProgrammaticNav = useRef(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // 辅助方法
+  // 辅助方法：生成计划描述
   const getPlanDescription = (book: Book, plan: PlanDetails): string => {
     const bookCount = book.totalWords;
     if (!bookCount || bookCount <= 0) return '计划信息不可用';
@@ -105,21 +99,23 @@ export default function BookSelectionDrawer() {
     return '未知的计划';
   };
 
-  // 事件处理
+  // 事件处理：关闭抽屉
   const handleCloseDrawer = () => {
     setIsBookDrawerOpen(false);
     setTimeout(() => {
       setPreviewBook(null);
       setOpenMenu(null);
       setModalState(null);
-      setPlanWordsModalState(null); // 关闭抽屉时也重置新模态框状态
+      setPlanWordsModalState(null);
     }, 300);
   };
 
+  // 事件处理：点击书籍卡片
   const handleBookCardClick = (book: Book) => {
     setPreviewBook((prev) => (prev?.listCode === book.listCode ? null : book));
   };
 
+  // 事件处理：开始学习（创建计划）
   const handleStartLearning = async (plan: PlanDetails) => {
     if (!previewBook || !accessToken) return;
     const loadingToastId = toast.loading('正在创建计划...');
@@ -137,6 +133,7 @@ export default function BookSelectionDrawer() {
     }
   };
 
+  // 事件处理：更新计划
   const handleUpdatePlan = async (
     planId: number,
     book: Book,
@@ -160,6 +157,7 @@ export default function BookSelectionDrawer() {
     }
   };
 
+  // 事件处理：激活学习计划
   const handleActivateLearning = async (planId: number, listCode: string) => {
     if (!accessToken || currentBookId === listCode) return;
     const oldBookId = currentBookId;
@@ -177,27 +175,31 @@ export default function BookSelectionDrawer() {
     }
   };
 
+  // 事件处理：调整计划
   const handleAdjustPlanClick = (book: Book) => {
     setPreviewBook((prev) => (prev?.listCode === book.listCode ? null : book));
     setOpenMenu(null);
   };
 
+  // 事件处理：打开重置弹窗
   const openResetModal = (planId: number, bookName: string) => {
     setModalState({ type: 'reset', planId, bookName });
     setOpenMenu(null);
   };
 
+  // 事件处理：打开取消学习弹窗
   const openCancelModal = (planId: number, bookName: string) => {
     setModalState({ type: 'cancel', planId, bookName });
     setOpenMenu(null);
   };
 
-  // 5. 添加打开新模态框的处理函数
+  // 事件处理：打开计划单词模态框
   const openPlanWordsModal = (planId: number, bookName: string) => {
     setPlanWordsModalState({ planId, bookName });
-    setOpenMenu(null); // 关闭 "..." 菜单
+    setOpenMenu(null);
   };
 
+  // 事件处理：确认重置进度
   const confirmResetProgress = async () => {
     if (modalState?.type !== 'reset' || !accessToken) return;
     const loadingToastId = toast.loading('正在重置进度...');
@@ -218,6 +220,7 @@ export default function BookSelectionDrawer() {
     setModalState(null);
   };
 
+  // 事件处理：确认取消学习
   const confirmCancelLearning = async () => {
     if (modalState?.type !== 'cancel' || !accessToken) return;
     const { planId } = modalState;
@@ -256,6 +259,7 @@ export default function BookSelectionDrawer() {
   const bookRows = chunk(currentBookList, 3);
   const modalBookName = modalState ? modalState.bookName : '';
 
+  // 语言切换时重置预览书籍
   useEffect(() => {
     if (isProgrammaticNav.current) {
       isProgrammaticNav.current = false;
@@ -275,6 +279,7 @@ export default function BookSelectionDrawer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLangCode, hierarchy]);
 
+  // 系列切换时重置预览书籍
   useEffect(() => {
     if (isProgrammaticNav.current) {
       isProgrammaticNav.current = false;
@@ -283,6 +288,23 @@ export default function BookSelectionDrawer() {
     setPreviewBook(null);
   }, [activeSeriesId]);
 
+  // 控制视图切换逻辑（核心修改：未登录时强制显示浏览视图）
+  useEffect(() => {
+    // 未登录时，强制显示"浏览"视图
+    if (!isLoggedIn) {
+      setMainView('browser');
+      return;
+    }
+
+    // 登录状态下，根据学习列表切换视图
+    if (learningList.length > 0 && !isProgrammaticNav.current) {
+      setMainView('learning');
+    } else if (learningList.length === 0) {
+      setMainView('browser');
+    }
+  }, [hierarchy, learningList, isLoggedIn]); // 新增isLoggedIn依赖
+
+  // 点击外部关闭菜单
   useEffect(() => {
     if (!openMenu) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -294,6 +316,7 @@ export default function BookSelectionDrawer() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenu]);
 
+  // 初始化层级数据
   useEffect(() => {
     if (hierarchy.length > 0) {
       setActiveLangCode(hierarchy[0].code);
@@ -307,18 +330,19 @@ export default function BookSelectionDrawer() {
       setActiveSeriesId('');
     }
 
-    if (learningList.length > 0 && !isProgrammaticNav.current) {
+    if (learningList.length > 0 && !isProgrammaticNav.current && isLoggedIn) {
       setMainView('learning');
-    } else if (learningList.length === 0) {
+    } else if (learningList.length === 0 || !isLoggedIn) {
       setMainView('browser');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hierarchy, learningList]);
+  }, [hierarchy, learningList, isLoggedIn]);
 
   return (
     <AnimatePresence>
       {isBookDrawerOpen && (
         <>
+          {/* 背景遮罩 */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -329,6 +353,7 @@ export default function BookSelectionDrawer() {
             aria-hidden="true"
           />
 
+          {/* 抽屉主体 */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -354,27 +379,34 @@ export default function BookSelectionDrawer() {
 
             {/* 主体内容区 */}
             <div className="flex flex-1 overflow-hidden">
-              {/* 垂直导航 */}
+              {/* 垂直导航（核心修改：未登录时隐藏"在学"按钮） */}
               <nav className="w-20 sm:w-24 shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
                 <ul className="flex flex-col items-center p-2 space-y-2">
-                  <li className="w-full">
-                    <button
-                      onClick={() => setMainView('learning')}
-                      className={`flex flex-col items-center justify-center w-full h-16 rounded-lg transition-colors ${
-                        mainView === 'learning'
-                          ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-                          : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
-                      }`}
-                      role="tab"
-                      aria-selected={mainView === 'learning'}
-                    >
-                      <Star className="w-5 h-5" />
-                      <span className="text-xs mt-1">在学</span>
-                    </button>
-                  </li>
-                  <li className="w-full px-2">
-                    <hr className="border-gray-200 dark:border-gray-700" />
-                  </li>
+                  {/* 仅登录状态显示"在学"按钮 */}
+                  {isLoggedIn && (
+                    <>
+                      <li className="w-full">
+                        <button
+                          onClick={() => setMainView('learning')}
+                          className={`flex flex-col items-center justify-center w-full h-16 rounded-lg transition-colors ${
+                            mainView === 'learning'
+                              ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                              : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                          }`}
+                          role="tab"
+                          aria-selected={mainView === 'learning'}
+                        >
+                          <Star className="w-5 h-5" />
+                          <span className="text-xs mt-1">在学</span>
+                        </button>
+                      </li>
+                      <li className="w-full px-2">
+                        <hr className="border-gray-200 dark:border-gray-700" />
+                      </li>
+                    </>
+                  )}
+
+                  {/* 语言列表导航 */}
                   {hierarchy.map((lang) => (
                     <li key={lang.code} className="w-full">
                       <button
@@ -393,7 +425,6 @@ export default function BookSelectionDrawer() {
                         }
                       >
                         <span className="text-lg font-bold">
-                          {/* 假设 lang 对象有 shortName 字段 */}
                           {lang.shortName || lang.code.toUpperCase()}
                         </span>
                         <span className="text-xs mt-1">{lang.name}</span>
@@ -455,8 +486,7 @@ export default function BookSelectionDrawer() {
                         openResetModal={openResetModal}
                         openCancelModal={openCancelModal}
                         setPreviewBook={setPreviewBook}
-                        handleUpdatePlan={handleUpdatePlan}
-                        handleViewPlanWords={openPlanWordsModal} // 6. 传递新 handler
+                        handleViewPlanWords={openPlanWordsModal}
                       />
                     )}
                   </AnimatePresence>
@@ -485,7 +515,7 @@ export default function BookSelectionDrawer() {
               onCancel={() => setModalState(null)}
             />
 
-            {/* 7. 渲染新模态框 */}
+            {/* 计划单词模态框 */}
             <PlanWordsModal
               isOpen={planWordsModalState !== null}
               planId={planWordsModalState?.planId}

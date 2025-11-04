@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-11-04 14:06:53
- * @LastEditTime: 2025-11-04 15:01:21
- * @Description: 
+ * @LastEditTime: 2025-11-04 18:36:04
+ * @Description:
  */
 'use client';
 
@@ -181,7 +181,6 @@ const DeleteAccountSection: React.FC<{ user: User }> = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations('Profile.deleteAccount');
-  const tCommon = useTranslations('common');
 
   /**
    * 处理账户删除

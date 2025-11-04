@@ -128,7 +128,7 @@ const ChangePasswordSection: React.FC<ChangePasswordSectionProps> = ({
    */
   const handleSendCode = async () => {
     if (!contactIdentifier) {
-      toast.error('没有可用的邮箱或手机号来发送验证码');
+      toast.error(tErr('noEmailORPhone'));
       return;
     }
     const errorMsg = await handleGetCode(contactIdentifier);
@@ -166,7 +166,7 @@ const ChangePasswordSection: React.FC<ChangePasswordSectionProps> = ({
     }
 
     if (!contactIdentifier) {
-      toast.error('用户信息不完整，无法重置密码');
+      toast.error(tErr('infoNotComplete'));
       return;
     }
 

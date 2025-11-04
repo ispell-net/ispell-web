@@ -246,8 +246,9 @@ const LoginModal: React.FC = () => {
   };
 
   return (
+    // 核心修改：z-40 → z-60，确保覆盖 Drawer 的 z-50
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={closeLoginModal}
       aria-modal="true"
       role="dialog"

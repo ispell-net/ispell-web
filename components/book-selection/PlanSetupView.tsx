@@ -1,22 +1,18 @@
-/*
- * @Description: 学习计划设置视图 (子组件 - 支持创建/更新，已国际化)
- * @Date: 2025-10-29 19:40:00
- * @LastEditTime: 2025-11-01 15:31:07
- */
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl'; // 导入国际化Hook
-import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
+import { toast } from 'react-hot-toast';
+import { useAppContext } from '@/contexts/app.context';
 import type { Book, PlanDetails } from '@/types/book.types';
 
 /** 预设的计划天数 */
 const PRESET_DAYS = [15, 30, 45, 60, 75, 90];
 
-/** 复习策略ID定义（与翻译键对应） */
+/** 复习策略ID定义 */
 type ReviewStrategyId = 'NONE' | 'EBBINGHAUS' | 'SM2' | 'LEITNER';
 
-/** 复习策略配置（仅保留ID，文本通过国际化获取） */
+/** 复习策略配置 */
 const REVIEW_STRATEGIES: Array<{ id: ReviewStrategyId; recommended: boolean }> =
   [
     { id: 'NONE', recommended: false },
@@ -28,26 +24,26 @@ const REVIEW_STRATEGIES: Array<{ id: ReviewStrategyId; recommended: boolean }> =
 /** 计划设置视图的 Props */
 interface PlanSetupViewProps {
   book: Book;
-  onStart: (plan: PlanDetails) => void; // 创建或更新计划
+  onStart: (plan: PlanDetails) => void;
   onCancel: () => void;
-  initialPlan?: PlanDetails | null; // 传入已有的计划 (用于编辑)
+  initialPlan?: PlanDetails | null;
 }
 
 const PlanSetupView: React.FC<PlanSetupViewProps> = ({
   book,
   onStart,
   onCancel,
-  initialPlan = null, // 默认值为 null
+  initialPlan = null,
 }) => {
-  // 国际化翻译Hook：指向 BookSelection 命名空间（PlanSetupView 嵌套其中）
+  const { isLoggedIn, openLoginModal } = useAppContext();
   const t = useTranslations('BookSelection');
 
-  // --- 状态 ---
+  // --- 状态管理 ---
   const [planType, setPlanType] = useState<
     'preset' | 'customDays' | 'customWords'
   >(initialPlan?.type || 'preset');
   const [presetDays, setPresetDays] = useState<number>(
-    initialPlan?.type === 'preset' ? initialPlan.value : 60 // 优先用 initialPlan 或默认 60
+    initialPlan?.type === 'preset' ? initialPlan.value : 60
   );
   const [customDays, setCustomDays] = useState<string>(
     initialPlan?.type === 'customDays' ? initialPlan.value.toString() : ''
@@ -56,37 +52,35 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
     initialPlan?.type === 'customWords' ? initialPlan.value.toString() : ''
   );
   const [reviewStrategy, setReviewStrategy] = useState<ReviewStrategyId>(
-    (initialPlan?.reviewStrategy as ReviewStrategyId) || 'EBBINGHAUS' // 优先用 initialPlan 或默认艾宾浩斯
+    (initialPlan?.reviewStrategy as ReviewStrategyId) || 'EBBINGHAUS'
   );
   const [learningOrder, setLearningOrder] = useState<'SEQUENTIAL' | 'RANDOM'>(
-    initialPlan?.learningOrder || 'SEQUENTIAL' // 优先用 initialPlan 或默认顺序
+    initialPlan?.learningOrder || 'SEQUENTIAL'
   );
 
-  // 区分是创建还是更新模式
   const isEditing = !!initialPlan;
 
-  // --- Effect: 当 initialPlan 变化时，重置表单状态 ---
+  // --- 当初始计划变化时重置表单 ---
   useEffect(() => {
     if (initialPlan) {
       setPlanType(initialPlan.type);
       setReviewStrategy(initialPlan.reviewStrategy as ReviewStrategyId);
       setLearningOrder(initialPlan.learningOrder);
+
       if (initialPlan.type === 'preset') {
         setPresetDays(initialPlan.value);
         setCustomDays('');
         setCustomWords('');
       } else if (initialPlan.type === 'customDays') {
         setCustomDays(initialPlan.value.toString());
-        setPresetDays(60); // 重置预设为默认
+        setPresetDays(60);
         setCustomWords('');
       } else {
-        // customWords
         setCustomWords(initialPlan.value.toString());
         setPresetDays(60);
         setCustomDays('');
       }
     } else {
-      // 如果没有 initialPlan (例如从编辑切换到创建)，重置为默认值
       setPlanType('preset');
       setPresetDays(60);
       setCustomDays('');
@@ -94,9 +88,9 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
       setReviewStrategy('EBBINGHAUS');
       setLearningOrder('SEQUENTIAL');
     }
-  }, [initialPlan]); // 依赖 initialPlan
+  }, [initialPlan]);
 
-  // --- 处理自定义数字输入 ---
+  // --- 处理数字输入 ---
   const handleNumericChange = (
     setter: React.Dispatch<React.SetStateAction<string>>,
     value: string
@@ -106,77 +100,81 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
       return;
     }
     const num = parseInt(value, 10);
-    // 检查是否是正整数
     if (!isNaN(num) && num > 0) {
       setter(num.toString());
-    } else if (value === '0') {
-      // 不允许输入0
     }
-    // 忽略其他无效输入 (如 'e', '-', '.')
   };
 
-  // --- 派生值计算 ---
+  // --- 计算派生数据 ---
   let wordsPerDay: number = 0;
   let totalDays: number = 0;
-  if (planType === 'preset' && presetDays > 0)
+  if (planType === 'preset' && presetDays > 0) {
     wordsPerDay = Math.ceil(book.totalWords / presetDays);
-  else if (planType === 'customDays' && Number(customDays) > 0)
+  } else if (planType === 'customDays' && Number(customDays) > 0) {
     wordsPerDay = Math.ceil(book.totalWords / Number(customDays));
-  else if (planType === 'customWords' && Number(customWords) > 0)
+  } else if (planType === 'customWords' && Number(customWords) > 0) {
     totalDays = Math.ceil(book.totalWords / Number(customWords));
+  }
 
-  // --- “保存/更新”按钮点击 ---
+  // --- 按钮点击处理（区分登录状态） ---
   const handleConfirmClick = () => {
+    if (!isLoggedIn) {
+      // 未登录：直接打开登录弹窗
+      openLoginModal();
+      return;
+    }
+
+    // 已登录：验证并提交计划
     let planBase: Omit<PlanDetails, 'reviewStrategy' | 'learningOrder'>;
 
     if (planType === 'preset') {
       planBase = { type: 'preset', value: presetDays };
     } else if (planType === 'customDays') {
-      // 最终验证，防止空值或无效值提交
       const daysNum = Number(customDays);
       if (isNaN(daysNum) || daysNum <= 0) {
-        toast.error(t('PlanSetupView.errors.invalidCustomDays')); // 国际化错误提示
+        toast.error(t('PlanSetupView.errors.invalidCustomDays'));
         return;
       }
       planBase = { type: 'customDays', value: daysNum };
     } else {
-      // customWords
-      // 最终验证，防止空值或无效值提交
       const wordsNum = Number(customWords);
       if (isNaN(wordsNum) || wordsNum <= 0) {
-        toast.error(t('PlanSetupView.errors.invalidCustomWords')); // 国际化错误提示
+        toast.error(t('PlanSetupView.errors.invalidCustomWords'));
         return;
       }
       planBase = { type: 'customWords', value: wordsNum };
     }
 
-    // 断言以添加 learningOrder 和 reviewStrategy
     const plan: PlanDetails = {
-      ...(planBase as Omit<PlanDetails, 'reviewStrategy' | 'learningOrder'>), // 断言
-      reviewStrategy: reviewStrategy as PlanDetails['reviewStrategy'], // 断言类型
+      ...planBase,
+      reviewStrategy: reviewStrategy as PlanDetails['reviewStrategy'],
       learningOrder: learningOrder,
     };
-
-    onStart(plan); // 调用传入的回调 (可能是创建或更新)
+    onStart(plan);
   };
 
-  // 获取当前选中的复习策略描述（国际化）
+  // 当前选中的复习策略描述
   const currentStrategyDescription = t(
     `PlanSetupView.reviewStrategies.${reviewStrategy}.description`
   );
 
+  // 动态按钮文本
+  const confirmButtonText = isLoggedIn
+    ? isEditing
+      ? t('PlanSetupView.buttons.updatePlan')
+      : t('PlanSetupView.buttons.createPlan')
+    : t('PlanSetupView.buttons.loginToCreate');
+
   return (
-    <div
-      className={`flex flex-col p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900`}
-    >
-      {/* 动态标题（国际化：创建/修改） */}
+    <div className="flex flex-col p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      {/* 标题 */}
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         {isEditing
           ? t('PlanSetupView.titles.editPlan', { bookName: book.name })
           : t('PlanSetupView.titles.createPlan', { bookName: book.name })}
       </h3>
 
-      {/* 预设计划（通用计划） */}
+      {/* 预设计划选择 */}
       <section>
         <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
           {t('PlanSetupView.sectionTitles.generalPlan')}
@@ -193,14 +191,13 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
                 p-3 rounded-lg border-2 text-center transition-colors
                 ${
                   planType === 'preset' && presetDays === days
-                    ? 'bg-gray-200 border-gray-400 dark:bg-gray-700 dark:border-gray-500' // 激活
-                    : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' // 默认
+                    ? 'bg-gray-200 border-gray-400 dark:bg-gray-700 dark:border-gray-500'
+                    : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                 }
               `}
             >
               <p className="font-medium text-gray-900 dark:text-white">
-                {`${days} ${t('PlanSetupView.presetPlan.dayUnit')}`}{' '}
-                {/* 国际化天数单位 */}
+                {`${days} ${t('PlanSetupView.presetPlan.dayUnit')}`}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {days > 0
@@ -214,7 +211,7 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
         </div>
       </section>
 
-      {/* 自定义计划 */}
+      {/* 自定义计划设置 */}
       <section className="mt-6">
         <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
           {t('PlanSetupView.sectionTitles.customPlan')}
@@ -247,21 +244,20 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
                 onFocus={() => setPlanType('customDays')}
                 disabled={planType !== 'customDays'}
                 className="w-28 text-center p-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50"
-                placeholder={t('PlanSetupView.placeholders.days')} // 国际化占位符
+                placeholder={t('PlanSetupView.placeholders.days')}
                 min="1"
               />
             </div>
-            {planType === 'customDays' &&
-              wordsPerDay > 0 &&
-              Number.isFinite(wordsPerDay) && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  {t('PlanSetupView.customPlan.wordsPerDay', {
-                    count: wordsPerDay,
-                  })}{' '}
-                </p>
-              )}
+            {planType === 'customDays' && wordsPerDay > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                {t('PlanSetupView.customPlan.wordsPerDay', {
+                  count: wordsPerDay,
+                })}
+              </p>
+            )}
           </div>
-          {/* 自定义单词 */}
+
+          {/* 自定义每日单词数 */}
           <div
             onClick={() => setPlanType('customWords')}
             className="p-3 rounded-lg border dark:border-gray-700 cursor-pointer bg-white dark:bg-gray-800"
@@ -288,24 +284,20 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
                 onFocus={() => setPlanType('customWords')}
                 disabled={planType !== 'customWords'}
                 className="w-28 text-center p-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50"
-                placeholder={t('PlanSetupView.placeholders.words')} // 国际化占位符
+                placeholder={t('PlanSetupView.placeholders.words')}
                 min="1"
               />
             </div>
-            {planType === 'customWords' &&
-              totalDays > 0 &&
-              Number.isFinite(totalDays) && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  {t('PlanSetupView.customPlan.totalDays', {
-                    count: totalDays,
-                  })}{' '}
-                </p>
-              )}
+            {planType === 'customWords' && totalDays > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                {t('PlanSetupView.customPlan.totalDays', { count: totalDays })}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
-      {/* 学习顺序 */}
+      {/* 学习顺序选择 */}
       <section className="mt-6">
         <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
           {t('PlanSetupView.sectionTitles.learningOrder')}
@@ -344,9 +336,9 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
         </div>
       </section>
 
-      {/* 复习策略 */}
+      {/* 复习策略选择 */}
       <section className="mt-6 space-y-3">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           <label
             htmlFor="reviewStrategy"
             className="text-base font-semibold text-gray-600 dark:text-gray-300"
@@ -377,22 +369,21 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
         </p>
       </section>
 
-      {/* 操作按钮 */}
+      {/* 操作按钮（核心修改：增大背景色差别） */}
       <div className="pt-8 flex space-x-3">
+        {/* 取消按钮（保持原有样式） */}
         <button
           onClick={onCancel}
           className="flex-1 py-3 rounded-lg bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 font-medium transition-colors hover:bg-gray-300 dark:hover:bg-gray-600"
         >
           {t('PlanSetupView.buttons.cancel')}
         </button>
-        {/* 动态按钮文本（国际化：创建/更新） */}
+        {/* 确认/登录按钮（核心样式修改） */}
         <button
           onClick={handleConfirmClick}
-          className="flex-1 py-3 rounded-lg bg-gray-900 text-white dark:bg-gray-200 dark:text-gray-900 font-medium transition-colors hover:bg-gray-700 dark:hover:bg-white"
+          className={`flex-1 py-3 rounded-lg font-medium transition-colors bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300`}
         >
-          {isEditing
-            ? t('PlanSetupView.buttons.updatePlan')
-            : t('PlanSetupView.buttons.createPlan')}
+          {confirmButtonText}
         </button>
       </div>
     </div>

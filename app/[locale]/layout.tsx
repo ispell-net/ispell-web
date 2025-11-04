@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-23 09:38:39
- * @LastEditTime: 2025-11-02 22:07:11
+ * @LastEditTime: 2025-11-04 19:12:53
  * @Description: 应用根布局组件 (已更新为更精简的 Sticky Header)
  */
 
@@ -95,25 +95,16 @@ export default async function RootLayout({
           <AppProvider>
             <SpellingProvider>
               <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col">
-                {/* --- 修改点 ---
-                  1. z-50 -> z-10 (降低 z-index)
-                  2. p-4 sm:p-6 -> p-4 (降低高度)
-                  3. 移除了 border-b ... (移除边框)
-                */}
                 <header className="sticky top-0 z-10 flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900">
                   <Logo />
                   <HeaderActions />
                 </header>
 
-                {/* --- 修改点 ---
-                  1. p-4 sm:p-6 -> p-4 (统一内边距)
-                */}
                 <main className="flex-1 flex flex-col items-center p-4">
                   {children}
                 </main>
               </div>
 
-              {/* 全局弹窗和提示 (保持不变) */}
               <AuthModals />
               <Toaster position="top-center" />
             </SpellingProvider>

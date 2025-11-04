@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-11-03 15:12:28
- * @LastEditTime: 2025-11-04 15:06:06
+ * @LastEditTime: 2025-11-04 18:34:35
  * @Description: 个人资料信息设置组件
  */
 'use client';
@@ -248,7 +248,7 @@ const ProfileInfoSection: React.FC<ProfileInfoSectionProps> = ({ user }) => {
             />
             {avatarFile && (
               <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-                已选择文件: {avatarFile.name}
+                ${t('chooseAvatar')}: {avatarFile.name}
               </p>
             )}
           </div>

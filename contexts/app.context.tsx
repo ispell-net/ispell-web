@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-28 22:05:53
- * @LastEditTime: 2025-11-03 18:50:38
+ * @LastEditTime: 2025-11-04 16:17:29
  * @Description: AppContext，已添加 refreshUser 和 OAuth 绑定监听器
  */
 'use client';
@@ -19,10 +19,7 @@ import { fetchBookHierarchy } from '@/services/bookService';
 import { fetchLearningList } from '@/services/planService';
 import { Tokens, User } from '@/types/auth.types';
 // [新] 导入 apiFetchProfile 和 OAuth 常量
-import {
-  apiFetchProfile,
-  EXPECTED_OAUTH_ORIGIN,
-} from '@/services/authService';
+import { apiFetchProfile, EXPECTED_OAUTH_ORIGIN } from '@/services/authService';
 import toast from 'react-hot-toast';
 
 export type Theme = 'light' | 'dark' | 'system';
@@ -311,6 +308,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .catch((err) => {
         console.error('加载书籍层级失败 (onMount):', err);
         setDataError(err.message || '无法加载书籍列表。');
+      })
+      .finally(() => {
+        setIsDataLoading(false);
       });
 
     // 2. 加载用户数据

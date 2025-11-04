@@ -110,7 +110,8 @@
       "buttons": {
         "cancel": "取消",
         "createPlan": "创建计划",
-        "updatePlan": "更新计划"
+        "updatePlan": "更新计划",
+        "loginToCreate": "登录以创建计划"
       },
       "placeholders": {
         "days": "天数",
@@ -118,7 +119,8 @@
       },
       "errors": {
         "invalidCustomDays": "请输入有效的自定义天数",
-        "invalidCustomWords": "请输入有效的每日单词数"
+        "invalidCustomWords": "请输入有效的每日单词数",
+        "needLogin": "请先登录后再创建学习计划～"
       },
       "presetPlan": {
         "dayUnit": "天",
@@ -297,10 +299,12 @@
     "invalidCode": "验证码无效或已过期",
     "invalidCredentials": "电子邮箱或密码不正确",
     "passwordNotSupported": "该账户不支持密码登录，请使用验证码",
+    "infoNotComplete": "用户信息不完整，无法重置密码",
     "userAlreadyExists": "该邮箱已被注册",
     "userNotFound": "该用户不存在",
     "sendCodeFailed": "验证码发送失败，请稍后再试",
     "sendCodeSuccess": "验证码已发送，请查收",
+    "noEmailORPhone": "没有可用的邮箱或手机号来发送验证码",
     "loginFailed": "登录失败，请稍后重试",
     "unknownError": "发生未知错误，请稍后再试",
     "oauthFailed": "第三方登录失败，请稍后再试",
@@ -334,7 +338,8 @@
       "avatarHint": "点击头像更换图片<br />支持 JPG、PNG 格式，不超过 2MB",
       "nicknameLabel": "昵称",
       "nicknamePlaceholder": "请输入您的昵称",
-      "saveSuccess": "个人资料已更新"
+      "saveSuccess": "个人资料已更新",
+      "chooseAvatar": "已选择头像"
     },
 
     "changePassword": {
