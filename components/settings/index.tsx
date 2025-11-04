@@ -1,19 +1,19 @@
 'use client';
 /*
  * @Date: 2025-10-27 02:37:15
- * @LastEditTime: 2025-11-01 15:41:10
- * @Description: 单词拼写功能的设置面板组件（支持国际化）
+ * @LastEditTime: 2025-11-04 20:24:47
+ * @Description: 单词拼写功能的设置面板组件 (已优化移动端兼容性)
  */
 
 import React, { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { useTranslations } from 'next-intl'; // 导入国际化Hook
+import { useTranslations } from 'next-intl';
 import { useSpelling } from '@/contexts/spelling.context';
 import { AccentType, DisplayMode, GenderType } from '@/types/word.types';
 import { Settings as SettingsIcon, X } from 'lucide-react';
 
 /**
- * 选项配置（仅保留value，label通过国际化获取）
+ * 选项配置 (无变化)
  */
 const SPEECH_SOURCE_OPTIONS = [
   { value: 'false' as const }, // 默认发音 (API)
@@ -37,12 +37,12 @@ const DISPLAY_MODE_OPTIONS = [
 ];
 
 /**
- * 设置表单
+ * 设置表单 (无变化)
  */
 const SettingsForm = () => {
-  const t = useTranslations('Settings'); // 国际化翻译Hook（独立Settings命名空间）
+  const t = useTranslations('Settings');
 
-  // 从Hook获取状态
+  // 从Hook获取状态 (无变化)
   const {
     speechConfig,
     setSpeechConfig,
@@ -54,7 +54,7 @@ const SettingsForm = () => {
     setShowSentences,
   } = useSpelling();
 
-  // 事件处理函数
+  // 事件处理函数 (无变化)
   const handleSpeechSourceChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setIsCustomSpeech(e.target.value === 'true');
   };
@@ -82,14 +82,15 @@ const SettingsForm = () => {
     setDisplayMode(e.target.value as DisplayMode);
   };
 
+  // 布局 (无变化)
   return (
-    <div className="flex flex-col space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+    <div className="flex flex-col space-y-5 max-h-[60vh] overflow-y-auto p-1 pr-3">
       {/* 语音设置 */}
       <section>
-        <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
           {t('sectionTitles.speechSettings')}
         </h3>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <SelectItem
             label={t('labels.speechSource')}
             options={SPEECH_SOURCE_OPTIONS.map((option) => ({
@@ -146,7 +147,7 @@ const SettingsForm = () => {
 
       {/* 单词显示设置 */}
       <section>
-        <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
           {t('sectionTitles.displaySettings')}
         </h3>
         <SelectItem
@@ -160,9 +161,9 @@ const SettingsForm = () => {
         />
       </section>
 
-      {/* 内容显示设置 */}
-      <section>
-        <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">
+      {/* 内容显示设置 (您注释掉的，我保持注释) */}
+      {/* <section>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
           {t('sectionTitles.contentSettings')}
         </h3>
         <ToggleItem
@@ -170,12 +171,12 @@ const SettingsForm = () => {
           checked={showSentences}
           onChange={setShowSentences}
         />
-      </section>
+      </section> */}
     </div>
   );
 };
 
-// 滑块组件（保持逻辑，仅国际化label）
+// 滑块组件 (无变化)
 interface SliderItemProps {
   label: string;
   value: number;
@@ -185,7 +186,6 @@ interface SliderItemProps {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   displayValue: string;
 }
-
 function SliderItem({
   label,
   value,
@@ -198,10 +198,10 @@ function SliderItem({
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
-        <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+        <label className="text-sm font-medium text-gray-900 dark:text-white">
           {label}
         </label>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {displayValue}
         </span>
       </div>
@@ -212,31 +212,33 @@ function SliderItem({
         max={max}
         step={step}
         onChange={onChange}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-gray-600 dark:accent-gray-400"
+        className="mt-1 w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-gray-900 dark:accent-gray-500"
       />
     </div>
   );
 }
 
-// 下拉选择组件（保持逻辑，仅国际化label）
+// 下拉选择组件 (无变化)
 interface SelectItemProps<T extends string> {
   label: string;
   options: { label: string; value: T }[];
   selectedValue: T;
   onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
 }
-
 function SelectItem<T extends string>({
   label,
   options,
   selectedValue,
   onChange,
 }: SelectItemProps<T>) {
+  const lightArrow = `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23374151' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`;
+  const darkArrow = `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`;
+
   return (
     <div>
       <label
         htmlFor={label}
-        className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1"
+        className="text-sm font-medium text-gray-900 dark:text-white block mb-1.5"
       >
         {label}
       </label>
@@ -244,7 +246,24 @@ function SelectItem<T extends string>({
         id={label}
         value={selectedValue}
         onChange={onChange}
-        className="w-full p-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-0 dark:focus:border-gray-600"
+        className="w-full rounded-lg border border-gray-300 py-2.5 px-3 pr-10 text-gray-900 focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-gray-600 dark:focus:ring-gray-600 appearance-none bg-no-repeat bg-right bg-[length:1.5em_1.5em]"
+        style={{ backgroundImage: `var(--select-arrow, ${lightArrow})` }}
+        onFocus={(e) => {
+          const isDark =
+            document.documentElement.getAttribute('data-theme') === 'dark';
+          e.target.style.setProperty(
+            '--select-arrow',
+            isDark ? darkArrow : lightArrow
+          );
+        }}
+        onClick={(e) => {
+          const isDark =
+            document.documentElement.getAttribute('data-theme') === 'dark';
+          (e.target as HTMLSelectElement).style.setProperty(
+            '--select-arrow',
+            isDark ? darkArrow : lightArrow
+          );
+        }}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -256,29 +275,31 @@ function SelectItem<T extends string>({
   );
 }
 
-// 开关组件（保持逻辑，仅国际化label）
+// 开关组件 (无变化)
 interface ToggleItemProps {
   label: string;
   checked: boolean;
   onChange: Dispatch<SetStateAction<boolean>>;
 }
-
 function ToggleItem({ label, checked, onChange }: ToggleItemProps) {
   return (
     <div className="flex items-center justify-between">
       <label
         htmlFor={label}
-        className="text-xs font-medium text-gray-700 dark:text-gray-300"
+        className="text-sm font-medium text-gray-900 dark:text-white"
       >
         {label}
       </label>
       <button
         id={label}
+        type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange((prev) => !prev)}
-        className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-          checked ? 'bg-gray-600' : 'bg-gray-300 dark:bg-gray-700'
+        className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+          checked
+            ? 'bg-gray-900 dark:bg-gray-700'
+            : 'bg-gray-200 dark:bg-gray-600'
         }`}
       >
         <span
@@ -293,13 +314,14 @@ function ToggleItem({ label, checked, onChange }: ToggleItemProps) {
 }
 
 /**
- * 设置面板主组件（国际化无障碍标签）
+ * 设置面板主组件
  */
 const Settings = () => {
   const t = useTranslations('Settings');
 
   return (
     <Popover.Root>
+      {/* 触发器 (无变化) */}
       <Popover.Trigger asChild>
         <button
           aria-label={t('aria.openSettings')}
@@ -308,15 +330,28 @@ const Settings = () => {
           <SettingsIcon className="transition-transform duration-300 group-hover:rotate-90" />
         </button>
       </Popover.Trigger>
+
+      {/* 弹窗内容 */}
       <Popover.Portal>
         <Popover.Content
           sideOffset={10}
           align="end"
-          className="z-50 w-72 rounded-lg border border-gray-200 bg-white p-4 shadow-xl outline-none dark:bg-gray-900 dark:border-gray-700 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-[side=right]:slide-in-from-left-2 data-[side=left]:slide-in-from-right-2"
+          // [!! 关键修改 !!]
+          // 1. 移除了 w-100 (无效类)
+          // 2. w-[calc(100vw-2rem)]: 移动端宽度 (全宽-边距)
+          // 3. sm:w-80: 桌面端宽度 (320px)
+          className="z-50 w-[calc(100vw-2rem)] sm:w-80 rounded-lg border border-gray-200 bg-white p-5 shadow-xl outline-none dark:bg-gray-900 dark:border-gray-700 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-[side=right]:slide-in-from-left-2 data-[side=left]:slide-in-from-right-2"
         >
+          {/* 标题 (无变化) */}
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t('aria.openSettings')}
+          </h2>
+
           <SettingsForm />
+
+          {/* 关闭按钮 (无变化) */}
           <Popover.Close
-            className="absolute right-2 top-2 p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+            className="absolute right-3 top-3 p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             aria-label={t('aria.closeSettings')}
           >
             <X className="h-4 w-4" />

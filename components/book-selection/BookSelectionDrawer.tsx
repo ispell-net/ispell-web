@@ -472,6 +472,7 @@ export default function BookSelectionDrawer() {
                         learningList={learningList}
                       />
                     ) : (
+                      // [!! 关键修复 !!] 添加缺失的 prop
                       <LearningView
                         learningList={learningList}
                         currentBookId={currentBookId}
@@ -486,6 +487,7 @@ export default function BookSelectionDrawer() {
                         openResetModal={openResetModal}
                         openCancelModal={openCancelModal}
                         setPreviewBook={setPreviewBook}
+                        handleUpdatePlan={handleUpdatePlan}
                         handleViewPlanWords={openPlanWordsModal}
                       />
                     )}

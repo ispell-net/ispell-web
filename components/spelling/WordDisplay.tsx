@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 10:02:44
- * @LastEditTime: 2025-11-01 15:55:01
+ * @LastEditTime: 2025-11-04 20:06:35
  * @Description: 单词拼写显示区域 (修改错题本逻辑)
  */
 'use client';
@@ -18,6 +18,8 @@ import {
 } from '@/utils/word.utils';
 import { SpeechOptions } from '@/utils/speech.utils';
 import { AccentType } from '@/types/word.types';
+import { Sen } from 'next/font/google';
+import SentenceDisplay from '../common/SentenceDisplay';
 
 export default function WordDisplay() {
   const {
@@ -38,7 +40,7 @@ export default function WordDisplay() {
   const successSfx =
     typeof window !== 'undefined' ? new Audio('/sfx/success.mp3') : null;
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const errorSfx =
     typeof window !== 'undefined' ? new Audio('/sfx/failed.wav') : null;
 

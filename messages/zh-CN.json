@@ -195,8 +195,8 @@
     },
     "options": {
       "speechSource": {
-        "default": "默认发音 (API)",
-        "custom": "自定义发音 (Browser)"
+        "default": "默认",
+        "custom": "自定义"
       },
       "accent": {
         "american": "美式",

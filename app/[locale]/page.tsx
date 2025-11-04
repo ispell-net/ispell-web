@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-23 09:38:39
- * @LastEditTime: 2025-11-02 22:01:14
+ * @LastEditTime: 2025-11-04 19:16:42
  * @Description: 拼写学习主页面组件 (已移除顶部边距)
  */
 'use client';
@@ -19,10 +19,7 @@ import WordDisplay from '@/components/spelling/WordDisplay'; // 单词展示组�
 import WordList from '@/components/word-list'; // 单词列表组件（当前学习会话的单词清单）
 import LearningStart from '@/components/learning-start'; // 学习开始组件（未激活会话时显示，用于启动学习）
 
-// 通用组件导入
-import Logo from '@/components/logo'; // 应用Logo组件
-import HeaderActions from '@/components/header-actions'; // 头部操作组件（用户信息、设置入口等）
-import Settings from '@/components/panels/Settings'; // 设置面板组件（控制学习参数、显示模式等）
+import Settings from '@/components/settings'; // 设置面板组件（控制学习参数、显示模式等）
 import BookSelectionDrawer from '@/components/book-selection/BookSelectionDrawer'; // 书籍选择抽屉（选择要学习的单词书）
 
 /**

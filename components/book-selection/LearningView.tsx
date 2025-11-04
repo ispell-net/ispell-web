@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-30 10:25:00
- * @LastEditTime: 2025-11-03 14:20:58
+ * @LastEditTime: 2025-11-04 20:16:37
  * @Description: 学习计划列表组件
  * 功能：展示用户已添加的学习计划，支持激活、调整、重置、取消学习等操作
  */
@@ -33,7 +33,7 @@ interface LearningViewProps {
   openCancelModal: (planId: number, bookName: string) => void;
   setPreviewBook: (book: Book | null) => void;
   handleUpdatePlan: (planId: number, book: Book, plan: PlanDetails) => void;
-  handleViewPlanWords: (planId: number, bookName: string) => void;
+  handleViewPlanWords?: (planId: number, bookName: string) => void;
 }
 
 const LearningView: React.FC<LearningViewProps> = ({
@@ -90,7 +90,7 @@ const LearningView: React.FC<LearningViewProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation(); // 阻止触发卡片点击
-                      handleViewPlanWords(planId, book.name);
+                      handleViewPlanWords?.(planId, book.name);
                     }}
                     className="absolute top-3 right-3 flex items-center space-x-1.5 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                     aria-label={t('LearningView.buttons.viewPlanWords')}

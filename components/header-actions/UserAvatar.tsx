@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-28 21:48:48
- * @LastEditTime: 2025-11-03 22:16:37
+ * @LastEditTime: 2025-11-04 20:08:37
  * @Description: 顶部导航栏用户头像组件 (已更新)
  */
 'use client';
@@ -111,7 +111,7 @@ const UserAvatar: React.FC = () => {
                 {t('profileSettings')}
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 href="/settings"
                 onClick={() => setIsOpen(false)}
@@ -120,7 +120,7 @@ const UserAvatar: React.FC = () => {
                 <Settings className="w-5 h-5 mr-3" />
                 {t('systemSettings')}
               </Link>
-            </li>
+            </li> */}
             <li className="mt-1 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleLogout}
