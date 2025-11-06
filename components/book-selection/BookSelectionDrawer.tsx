@@ -1,8 +1,13 @@
+/*
+ * @Date: 2025-11-04 20:17:42
+ * @LastEditTime: 2025-11-06 16:25:11
+ * @Description: 
+ */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star } from 'lucide-react';
+import { X, Star, ArchiveX, ListTree } from 'lucide-react';
 import { useAppContext } from '@/contexts/app.context';
 import type { Book, PlanDetails } from '@/types/book.types';
 import {
@@ -10,6 +15,7 @@ import {
   deletePlan,
   resetPlan,
   activatePlan,
+  getMistakeReviewWords,
 } from '@/services/planService';
 import toast from 'react-hot-toast';
 
@@ -18,18 +24,11 @@ import BrowserView from './BrowserView';
 import LearningView from './LearningView';
 import ConfirmationModal from '../common/ConfirmationModal';
 import PlanWordsModal from './PlanWordsModal';
+import MistakeModal from './MistakeModal';
 
-// 辅助函数：将数组按指定大小分片
-function chunk<T>(arr: T[], size: number): T[][] {
-  if (size <= 0) throw new Error('Chunk size must be greater than 0');
-  const result: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size));
-  }
-  return result;
-}
+// [!! 移除 !!] chunk 辅助函数 (已移至 BrowserView)
+// ...
 
-// 复习策略名称映射
 const reviewStrategyNames: { [key: string]: string } = {
   NONE: '不复习',
   EBBINGHAUS: '艾宾浩斯',
@@ -50,6 +49,12 @@ type PlanWordsModalState = {
   bookName: string;
 };
 
+// 错题集模态框状态类型
+type MistakeModalState = {
+  planId: number;
+  bookName: string;
+};
+
 export default function BookSelectionDrawer() {
   // 从Context获取数据
   const {
@@ -64,7 +69,8 @@ export default function BookSelectionDrawer() {
     refreshAllData,
     isBookDrawerOpen,
     setIsBookDrawerOpen,
-    isLoggedIn, // 新增：获取登录状态
+    isLoggedIn,
+    startMistakeReview,
   } = useAppContext();
 
   // 内部状态
@@ -77,10 +83,13 @@ export default function BookSelectionDrawer() {
   const [planWordsModalState, setPlanWordsModalState] =
     useState<PlanWordsModalState | null>(null);
 
+  const [mistakeModalState, setMistakeModalState] =
+    useState<MistakeModalState | null>(null);
+
   const isProgrammaticNav = useRef(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // 辅助方法：生成计划描述
+  // ... (所有 getPlanDescription, handle... 事件处理器保持不变) ...
   const getPlanDescription = (book: Book, plan: PlanDetails): string => {
     const bookCount = book.totalWords;
     if (!bookCount || bookCount <= 0) return '计划信息不可用';
@@ -98,8 +107,6 @@ export default function BookSelectionDrawer() {
       )} 天)`;
     return '未知的计划';
   };
-
-  // 事件处理：关闭抽屉
   const handleCloseDrawer = () => {
     setIsBookDrawerOpen(false);
     setTimeout(() => {
@@ -107,15 +114,12 @@ export default function BookSelectionDrawer() {
       setOpenMenu(null);
       setModalState(null);
       setPlanWordsModalState(null);
+      setMistakeModalState(null);
     }, 300);
   };
-
-  // 事件处理：点击书籍卡片
   const handleBookCardClick = (book: Book) => {
     setPreviewBook((prev) => (prev?.listCode === book.listCode ? null : book));
   };
-
-  // 事件处理：开始学习（创建计划）
   const handleStartLearning = async (plan: PlanDetails) => {
     if (!previewBook || !accessToken) return;
     const loadingToastId = toast.loading('正在创建计划...');
@@ -132,8 +136,6 @@ export default function BookSelectionDrawer() {
       toast.error('创建计划失败，请稍后重试');
     }
   };
-
-  // 事件处理：更新计划
   const handleUpdatePlan = async (
     planId: number,
     book: Book,
@@ -156,12 +158,9 @@ export default function BookSelectionDrawer() {
       toast.error('更新计划失败，请稍后重试');
     }
   };
-
-  // 事件处理：激活学习计划
   const handleActivateLearning = async (planId: number, listCode: string) => {
     if (!accessToken || currentBookId === listCode) return;
     const oldBookId = currentBookId;
-
     try {
       await activatePlan(planId);
       setCurrentBookId(listCode);
@@ -174,32 +173,46 @@ export default function BookSelectionDrawer() {
       if (oldBookId) setCurrentBookId(oldBookId);
     }
   };
-
-  // 事件处理：调整计划
   const handleAdjustPlanClick = (book: Book) => {
     setPreviewBook((prev) => (prev?.listCode === book.listCode ? null : book));
     setOpenMenu(null);
   };
-
-  // 事件处理：打开重置弹窗
   const openResetModal = (planId: number, bookName: string) => {
     setModalState({ type: 'reset', planId, bookName });
     setOpenMenu(null);
   };
-
-  // 事件处理：打开取消学习弹窗
   const openCancelModal = (planId: number, bookName: string) => {
     setModalState({ type: 'cancel', planId, bookName });
     setOpenMenu(null);
   };
-
-  // 事件处理：打开计划单词模态框
   const openPlanWordsModal = (planId: number, bookName: string) => {
     setPlanWordsModalState({ planId, bookName });
     setOpenMenu(null);
   };
-
-  // 事件处理：确认重置进度
+  const openMistakeModal = (planId: number, bookName: string) => {
+    setMistakeModalState({ planId, bookName });
+    setOpenMenu(null);
+  };
+  const handleStartMistakeReview = async (planId: number) => {
+    if (!accessToken) return;
+    try {
+      const { words } = await getMistakeReviewWords(planId);
+      if (words.length === 0) {
+        toast.error('错题集是空的！');
+        return;
+      }
+      if (startMistakeReview) {
+        startMistakeReview(planId, words);
+      } else {
+        console.warn('AppContext.startMistakeReview 未定义');
+      }
+      toast.success('错题复习已开始！');
+      handleCloseDrawer();
+    } catch (err) {
+      console.error('开始错题复习失败:', err);
+      toast.error('启动复习失败，请重试');
+    }
+  };
   const confirmResetProgress = async () => {
     if (modalState?.type !== 'reset' || !accessToken) return;
     const loadingToastId = toast.loading('正在重置进度...');
@@ -219,8 +232,6 @@ export default function BookSelectionDrawer() {
     }
     setModalState(null);
   };
-
-  // 事件处理：确认取消学习
   const confirmCancelLearning = async () => {
     if (modalState?.type !== 'cancel' || !accessToken) return;
     const { planId } = modalState;
@@ -228,7 +239,6 @@ export default function BookSelectionDrawer() {
       (p) => p.planId === planId
     )?.listCode;
     const loadingToastId = toast.loading('正在取消学习...');
-
     try {
       await deletePlan(planId);
       await refreshAllData();
@@ -255,11 +265,11 @@ export default function BookSelectionDrawer() {
   const currentSeriesData = currentSeriesList.find(
     (series) => series.id.toString() === activeSeriesId
   );
-  const currentBookList = currentSeriesData?.wordLists || [];
-  const bookRows = chunk(currentBookList, 3);
+  const currentBookList = currentSeriesData?.wordLists || []; // [!!] 这个原始列表会传递给 BrowserView
+  // const bookRows = chunk(currentBookList, 3); // [!!] 移除这一行
   const modalBookName = modalState ? modalState.bookName : '';
 
-  // 语言切换时重置预览书籍
+  // ... (所有 useEffects 保持不变) ...
   useEffect(() => {
     if (isProgrammaticNav.current) {
       isProgrammaticNav.current = false;
@@ -279,7 +289,6 @@ export default function BookSelectionDrawer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLangCode, hierarchy]);
 
-  // 系列切换时重置预览书籍
   useEffect(() => {
     if (isProgrammaticNav.current) {
       isProgrammaticNav.current = false;
@@ -288,23 +297,18 @@ export default function BookSelectionDrawer() {
     setPreviewBook(null);
   }, [activeSeriesId]);
 
-  // 控制视图切换逻辑（核心修改：未登录时强制显示浏览视图）
   useEffect(() => {
-    // 未登录时，强制显示"浏览"视图
     if (!isLoggedIn) {
       setMainView('browser');
       return;
     }
-
-    // 登录状态下，根据学习列表切换视图
     if (learningList.length > 0 && !isProgrammaticNav.current) {
       setMainView('learning');
     } else if (learningList.length === 0) {
       setMainView('browser');
     }
-  }, [hierarchy, learningList, isLoggedIn]); // 新增isLoggedIn依赖
+  }, [hierarchy, learningList, isLoggedIn]);
 
-  // 点击外部关闭菜单
   useEffect(() => {
     if (!openMenu) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -316,7 +320,6 @@ export default function BookSelectionDrawer() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenu]);
 
-  // 初始化层级数据
   useEffect(() => {
     if (hierarchy.length > 0) {
       setActiveLangCode(hierarchy[0].code);
@@ -329,7 +332,6 @@ export default function BookSelectionDrawer() {
       setActiveLangCode('');
       setActiveSeriesId('');
     }
-
     if (learningList.length > 0 && !isProgrammaticNav.current && isLoggedIn) {
       setMainView('learning');
     } else if (learningList.length === 0 || !isLoggedIn) {
@@ -342,7 +344,7 @@ export default function BookSelectionDrawer() {
     <AnimatePresence>
       {isBookDrawerOpen && (
         <>
-          {/* 背景遮罩 */}
+          {/* ... (背景遮罩 和 抽屉主体头部 保持不变) ... */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -352,8 +354,6 @@ export default function BookSelectionDrawer() {
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             aria-hidden="true"
           />
-
-          {/* 抽屉主体 */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -363,7 +363,6 @@ export default function BookSelectionDrawer() {
             role="dialog"
             aria-modal="true"
           >
-            {/* 头部 */}
             <div className="flex items-center justify-between p-4 shrink-0 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 书架
@@ -377,12 +376,10 @@ export default function BookSelectionDrawer() {
               </button>
             </div>
 
-            {/* 主体内容区 */}
+            {/* ... (主体内容区 和 垂直导航 保持不变) ... */}
             <div className="flex flex-1 overflow-hidden">
-              {/* 垂直导航（核心修改：未登录时隐藏"在学"按钮） */}
               <nav className="w-20 sm:w-24 shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
                 <ul className="flex flex-col items-center p-2 space-y-2">
-                  {/* 仅登录状态显示"在学"按钮 */}
                   {isLoggedIn && (
                     <>
                       <li className="w-full">
@@ -405,8 +402,6 @@ export default function BookSelectionDrawer() {
                       </li>
                     </>
                   )}
-
-                  {/* 语言列表导航 */}
                   {hierarchy.map((lang) => (
                     <li key={lang.code} className="w-full">
                       <button
@@ -434,7 +429,7 @@ export default function BookSelectionDrawer() {
                 </ul>
               </nav>
 
-              {/* 右侧内容区 (视图切换) */}
+              {/* ... (右侧内容区 和 加载/错误状态 保持不变) ... */}
               <div className="flex-1 flex flex-col overflow-hidden">
                 {isDataLoading && (
                   <div className="flex-1 flex items-center justify-center">
@@ -461,8 +456,8 @@ export default function BookSelectionDrawer() {
                       <BrowserView
                         currentSeriesList={currentSeriesList}
                         currentSeriesData={currentSeriesData}
-                        currentBookList={currentBookList}
-                        bookRows={bookRows}
+                        currentBookList={currentBookList} // [!!] 传递原始列表
+                        // bookRows={bookRows} // [!!] 移除此 prop
                         previewBook={previewBook}
                         activeSeriesId={activeSeriesId}
                         setActiveSeriesId={setActiveSeriesId}
@@ -472,7 +467,6 @@ export default function BookSelectionDrawer() {
                         learningList={learningList}
                       />
                     ) : (
-                      // [!! 关键修复 !!] 添加缺失的 prop
                       <LearningView
                         learningList={learningList}
                         currentBookId={currentBookId}
@@ -489,6 +483,7 @@ export default function BookSelectionDrawer() {
                         setPreviewBook={setPreviewBook}
                         handleUpdatePlan={handleUpdatePlan}
                         handleViewPlanWords={openPlanWordsModal}
+                        handleViewMistakes={openMistakeModal}
                       />
                     )}
                   </AnimatePresence>
@@ -496,7 +491,7 @@ export default function BookSelectionDrawer() {
               </div>
             </div>
 
-            {/* 确认弹窗 */}
+            {/* 确认弹窗 (保持不变) */}
             <ConfirmationModal
               isOpen={modalState !== null}
               title={modalState?.type === 'cancel' ? '取消学习' : '重置进度'}
@@ -517,12 +512,21 @@ export default function BookSelectionDrawer() {
               onCancel={() => setModalState(null)}
             />
 
-            {/* 计划单词模态框 */}
+            {/* 计划单词模态框 (保持不变) */}
             <PlanWordsModal
               isOpen={planWordsModalState !== null}
               planId={planWordsModalState?.planId}
               bookName={planWordsModalState?.bookName}
               onClose={() => setPlanWordsModalState(null)}
+            />
+
+            {/* 错题集模态框 (保持不变) */}
+            <MistakeModal
+              isOpen={mistakeModalState !== null}
+              planId={mistakeModalState?.planId}
+              bookName={mistakeModalState?.bookName}
+              onClose={() => setMistakeModalState(null)}
+              onStartReview={handleStartMistakeReview}
             />
           </motion.div>
         </>

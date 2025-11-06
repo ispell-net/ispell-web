@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-30 10:23:51
- * @LastEditTime: 2025-11-01 14:33:16
- * @Description: 书籍卡片组件（支持国际化，嵌套在 BookSelection 命名空间下）
+ * @LastEditTime: 2025-11-06 22:13:58
+ * @Description: 书籍卡片组件 ([!! 已修改 !!] 移除了倒三角)
  * 功能：展示单本书籍信息，支持选中状态显示，点击触发选择事件
  */
 
@@ -70,6 +70,8 @@ const BookCard: React.FC<BookCardProps> = ({ book, isActive, onSelect }) => {
       {isActive && (
         <Check className="absolute top-3 right-3 w-5 h-5 text-gray-900 dark:text-gray-100" />
       )}
+
+      {/* [!! 已移除 !!] 倒三角箭头代码已被删除 */}
     </button>
   );
 };

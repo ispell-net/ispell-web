@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-29 23:14:16
- * @LastEditTime: 2025-11-03 13:55:11
- * @Description: 学习计划相关 API 服务
+ * @LastEditTime: 2025-11-07 09:48:43
+ * @Description: 学习计划相关 API 服务 (已添加错题集管理)
  */
 
 import apiClient from '@/utils/api.utils';
@@ -226,3 +226,105 @@ export async function getPlanWordsByDay(
     throw error;
   }
 }
+
+// --- [!! 新增 !!] 错题集服务 ---
+
+/**
+ * 错题集条目类型 (来自后端)
+ */
+export interface MistakeEntry {
+  id: number;
+  planId: number;
+  wordId: number;
+  mistakeCount: number;
+  createdAt: string;
+  updatedAt: string;
+  word: Word;
+}
+
+/**
+ * 1. 获取指定计划的错题集列表
+ */
+export const getMistakes = async (planId: number): Promise<MistakeEntry[]> => {
+  const endpoint = `/plans/${planId}/mistakes`;
+  console.log(`[Plan Service] Fetching mistakes for plan: ${planId}`);
+  try {
+    const response = await apiClient(endpoint, { method: 'GET' });
+    if (!response.ok) {
+      await handleApiError(response, 'Failed to fetch mistakes.');
+    }
+    return response.json();
+  } catch (error) {
+    console.error(`[Plan Service Error] Fetching mistakes failed:`, error);
+    throw error;
+  }
+};
+
+/**
+ * 2. 获取错题集复习单词列表
+ */
+export const getMistakeReviewWords = async (
+  planId: number
+): Promise<{ words: Word[] }> => {
+  const endpoint = `/plans/${planId}/mistakes/review`;
+  console.log(
+    `[Plan Service] Fetching mistake review words for plan: ${planId}`
+  );
+  try {
+    const response = await apiClient(endpoint, { method: 'GET' });
+    if (!response.ok) {
+      await handleApiError(response, 'Failed to fetch mistake review words.');
+    }
+    // 后端返回 { words: [...] } 结构
+    return response.json();
+  } catch (error) {
+    console.error(
+      `[Plan Service Error] Fetching mistake review words failed:`,
+      error
+    );
+    throw error;
+  }
+};
+
+/**
+ * 3. 从错题集移除单个单词
+ */
+export const removeMistake = async (
+  planId: number,
+  wordId: number
+): Promise<{ message: string }> => {
+  const endpoint = `/plans/${planId}/mistakes/words/${wordId}`;
+  console.log(
+    `[Plan Service] Removing mistake: plan=${planId}, word=${wordId}`
+  );
+  try {
+    const response = await apiClient(endpoint, { method: 'DELETE' });
+    if (!response.ok) {
+      await handleApiError(response, 'Failed to remove mistake.');
+    }
+    return response.json();
+  } catch (error) {
+    console.error(`[Plan Service Error] Removing mistake failed:`, error);
+    throw error;
+  }
+};
+
+/**
+ * 4. 清空计划的错题集
+ */
+export const clearMistakes = async (
+  planId: number
+): Promise<{ message: string }> => {
+  const endpoint = `/plans/${planId}/mistakes`;
+  console.log(`[Plan Service] Clearing all mistakes for plan: ${planId}`);
+  try {
+    const response = await apiClient(endpoint, { method: 'DELETE' });
+    if (!response.ok) {
+      await handleApiError(response, 'Failed to clear mistakes.');
+    }
+    return response.json();
+  } catch (error) {
+    console.error(`[Plan Service Error] Clearing mistakes failed:`, error);
+    throw error;
+  }
+};

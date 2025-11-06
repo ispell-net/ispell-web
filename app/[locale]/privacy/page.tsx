@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-11-01 22:31:03
- * @LastEditTime: 2025-11-02 22:12:14
+ * @LastEditTime: 2025-11-06 21:19:04
  * @Description: 隐私政策页面 (已适配 Sticky 布局)
  */
 import React from 'react';
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
     // 2. 移除 min-h-screen (layout 已处理)
     // 3. 移除 mt-12
     // 4. 添加 w-full
-    <div className="w-full  py-12">
+    <div className="w-full py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 页面主标题 */}
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">

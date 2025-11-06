@@ -51,7 +51,7 @@
     "loginNow": "立即登录"
   },
   "LearningStart": {
-    "title": "学习准备就绪",
+    "title": "准备就绪",
     "noActiveBookDescription": "从书架挑选一本书，即刻开始学习！",
     "browseBookshelfBtn": "逛逛书架",
     "openBookshelfBtn": "打开书架",
@@ -63,6 +63,8 @@
     "todayProgressTitle": "今日进度",
     "todayTaskOnlyNew": "新学 {completed}/{total}",
     "todayTaskWithReview": "新学 {completedNew}/{totalNew} | 复习 {completedReview}/{totalReview}",
+    "congratsBookCompleteTitle": "恭喜",
+    "congratsBookCompleteDesc": "您已完成 {bookName} 所有章节",
     "alt": {
       "selectBookIllustration": "选择书籍插图",
       "bookIllustration": "单词书插图"
@@ -78,7 +80,11 @@
     },
     "LearningView": {
       "currentActive": "当前激活",
-      "noLearningBooks": "你还没有开始学习的书籍。",
+      "noLearningBooks": "您没有正在学习的书籍，去挑一本吧。",
+      "empty": {
+        "title": "书架空空如也",
+        "alt": "一个宇航员在探索的插图"
+      },
       "learningOrder": {
         "label": "顺序",
         "sequential": "顺序",
@@ -89,11 +95,12 @@
       },
       "buttons": {
         "active": "已激活",
-        "setAsCurrent": "设为当前",
+        "setAsCurrent": "激活计划",
         "adjustPlan": "调整计划",
         "resetProgress": "重置进度",
         "cancelLearning": "取消学习",
-        "viewPlanWords": "查看方案"
+        "viewPlanWords": "查看方案",
+        "viewMistakes": "错题集"
       }
     },
     "PlanSetupView": {
@@ -111,7 +118,8 @@
         "cancel": "取消",
         "createPlan": "创建计划",
         "updatePlan": "更新计划",
-        "loginToCreate": "登录以创建计划"
+        "loginToCreate": "登录以创建计划",
+        "viewWords": "查看单词"
       },
       "placeholders": {
         "days": "天数",
@@ -176,22 +184,46 @@
       "dayHeader": "第 {day} 天",
       "wordCount": "{count} 词",
       "empty": "该计划中没有单词。",
-      "close": "关闭"
+      "close": "关闭",
+      "searchPlaceholder": "搜索 {count} 个单词...",
+      "noResults": "未找到包含 “{query}” 的单词"
+    },
+    "MistakeModal": {
+      "title": "错题集: {bookName}",
+      "loading": "正在加载错题集...",
+      "error": "无法加载错题集，请稍后重试。",
+      "empty": "太棒了！错题集是空的。",
+      "emptyReview": "错题集是空的，无需复习。",
+      "close": "关闭",
+      "mistakeCount": "拼错 {count} 次",
+      "removeAria": "移除此错题",
+      "removeSuccess": "已移除错题",
+      "removeError": "移除失败",
+      "clearAll": "清空错题集",
+      "clearAllSuccess": "错题集已清空",
+      "clearAllError": "清空失败",
+      "clearAllConfirmTitle": "确认清空错题集吗？",
+      "clearAllConfirmDesc": "此操作将永久删除《{bookName}》的所有错题记录，无法撤销。",
+      "clearAllConfirmBtn": "确认清空",
+      "reviewAll": "复习全部 ({count} 词)",
+      "strategyHint": "提示：拼写正确可降低拼错计数，次数为 0 时自动移出错题集。"
     }
   },
   "Settings": {
     "sectionTitles": {
       "speechSettings": "语音设置",
-      "displaySettings": "单词隐藏",
-      "contentSettings": "内容显示"
+      "displaySettings": "显示设置",
+      "sentenceSettings": "例句设置"
     },
     "labels": {
       "speechSource": "发音源",
       "accent": "口音",
       "speechRate": "语速",
       "voiceGender": "声音",
-      "displayMode": "模式",
-      "showSentences": "显示例句"
+      "displayMode": "背诵模式",
+      "hideWordInSentence": "隐藏例句单词",
+      "showSentences": "显示例句",
+      "showSentenceTranslation": "显示例句翻译"
     },
     "options": {
       "speechSource": {
@@ -216,7 +248,7 @@
       }
     },
     "aria": {
-      "openSettings": "打开设置",
+      "openSettings": "设置",
       "closeSettings": "关闭设置"
     }
   },
@@ -238,7 +270,7 @@
       "timing": "计时",
       "attempts": "尝试次数",
       "correctSpelling": "正确拼写",
-      "mastered": "已掌握",
+      "remainingWords": "剩余单词",
       "accuracy": "正确率"
     },
     "Pronunciation": {
@@ -251,12 +283,9 @@
       "unsupportedHint": "浏览器不支持语音功能"
     },
     "Sentence": {
-      "show": "显示例句",
-      "hide": "隐藏例句",
       "aria": {
-        "show": "显示例句",
-        "hide": "隐藏例句",
-        "toggleTranslation": "显示/隐藏翻译"
+        "prevSentence": "上一句",
+        "nextSentence": "下一句"
       }
     },
     "Relations": {
@@ -326,12 +355,12 @@
     "hello": "你好",
     "profileSettings": "个性设置",
     "systemSettings": "系统设置",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "changelog": "更新日志"
   },
   "Profile": {
     "pageTitle": "个性设置",
     "pageDescription": "管理您的个人信息、密码和账号绑定",
-
     "profileInfo": {
       "title": "个人资料",
       "avatarLabel": "头像",
@@ -341,7 +370,6 @@
       "saveSuccess": "个人资料已更新",
       "chooseAvatar": "已选择头像"
     },
-
     "changePassword": {
       "title": "修改密码",
       "setPasswordTitle": "设置密码",
@@ -360,7 +388,6 @@
       "saveSuccess_change": "密码修改成功",
       "saveSuccess_set": "密码设置成功"
     },
-
     "accountBindings": {
       "title": "账号绑定",
       "description": "绑定第三方账号可使用对应账号快速登录",
@@ -372,7 +399,6 @@
       "unbindSuccess": "已成功解除与{provider}的绑定",
       "bindFailed": "获取绑定链接失败，请稍后再试"
     },
-
     "deleteAccount": {
       "title": "危险操作",
       "sectionTitle": "账户删除",
@@ -434,6 +460,23 @@
       "closeCertificate": "关闭证书查看",
       "closePublicity": "关闭公示",
       "viewPublicity": "查看捐款公示"
+    }
+  },
+  "Changelog": {
+    "title": "更新日志",
+    "description": "看看我们都做了哪些新改进。",
+    "types": {
+      "new": "新增",
+      "fix": "修复",
+      "refactor": "重构",
+      "perf": "性能",
+      "docs": "书籍"
+    },
+    "v1_0_0": {
+      "new1": "iSpell 爱拼词正式发布！",
+      "new2": "支持邮箱/密码、邮箱验证码及第三方 (GitHub, Google) 认证登录。",
+      "new3": "实现拼写与学习模块，包括单词浏览、计划制定、拼写练习和智能复习。",
+      "docs1": "上线 67 本英文单词书，涵盖学生阶段到出国留学全场景。"
     }
   }
 }

@@ -1,16 +1,16 @@
 /*
  * @Date: 2025-10-28 21:48:48
- * @LastEditTime: 2025-11-04 20:08:37
- * @Description: 顶部导航栏用户头像组件 (已更新)
+ * @LastEditTime: 2025-11-06 21:40:14
+ * @Description: 顶部导航栏用户头像组件 (已修正拼写错误)
  */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAppContext } from '@/contexts/app.context';
-import { Settings, UserCog, LogOut } from 'lucide-react';
+// 导入图标 (Settings, UserCog, LogOut, LayoutList)
+import { Settings, UserCog, LogOut, LayoutList } from 'lucide-react';
 import Link from 'next/link';
-// [!! 关键修改 !!] 1. 导入新的工具函数
 import { resolveCdnUrl } from '@/utils/cdn.utils';
 
 const UserAvatar: React.FC = () => {
@@ -20,8 +20,7 @@ const UserAvatar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ... (useEffect 钩子等其他逻辑保持不变) ...
-  // 1. [新] 监听 Escape 键
+  // 1. 监听 Escape 键
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -36,7 +35,7 @@ const UserAvatar: React.FC = () => {
     };
   }, [isOpen]);
 
-  // 2. [新] 监听点击外部
+  // 2. 监听点击外部
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -54,14 +53,13 @@ const UserAvatar: React.FC = () => {
     };
   }, [isOpen]);
 
+  // 处理登出
   const handleLogout = () => {
     setIsOpen(false);
     logout();
   };
 
-  // [!! 关键修改 !!] 2. 使用 resolveCdnUrl 包装 user.avatar
-  // 如果 user.avatar 是 /ispell-cos/...，它会被转换为 CDN 链接
-  // 如果是 null 或 /images/..., 它会按原样返回
+  // 解析头像 CDN 链接
   const avatarSrc = resolveCdnUrl(user?.avatar) || '/images/user/default.png';
 
   return (
@@ -74,7 +72,7 @@ const UserAvatar: React.FC = () => {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={avatarSrc} // <--- 此处已更新
+          src={avatarSrc}
           alt={user?.nickname || 'User Avatar'}
           width={40}
           height={40}
@@ -82,14 +80,15 @@ const UserAvatar: React.FC = () => {
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/images/user/default.png';
           }}
+          // [!! 修正 !!] 移除了上一版中多余的 'D' 字符
         />
       </button>
 
-      {/* 下拉菜单 (保持不变) */}
+      {/* 下拉菜单 */}
       {isOpen && (
         <div className="absolute top-full right-0 mt-2 w-56 z-20 origin-top-right">
-          {/* ... (下拉菜单内部代码无变化) ... */}
           <ul className="py-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+            {/* 欢迎信息 */}
             <li className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <p className="text-sm text-gray-900 dark:text-white truncate">
                 <span className="font-medium text-gray-500 dark:text-gray-400">
@@ -101,6 +100,8 @@ const UserAvatar: React.FC = () => {
                 </span>
               </p>
             </li>
+
+            {/* 个性设置 */}
             <li className="mt-1">
               <Link
                 href="/profile"
@@ -111,7 +112,21 @@ const UserAvatar: React.FC = () => {
                 {t('profileSettings')}
               </Link>
             </li>
-            {/* <li>
+
+            {/* 更新日志入口 */}
+            <li>
+              <Link
+                href="/changelog"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <LayoutList className="w-5 h-5 mr-3" />
+                {t('changelog')}
+              </Link>
+            </li>
+
+            {/* 被注释掉的系统设置
+            <li>
               <Link
                 href="/settings"
                 onClick={() => setIsOpen(false)}
@@ -120,7 +135,10 @@ const UserAvatar: React.FC = () => {
                 <Settings className="w-5 h-5 mr-3" />
                 {t('systemSettings')}
               </Link>
-            </li> */}
+            </li>
+            */}
+
+            {/* 退出登录 */}
             <li className="mt-1 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleLogout}

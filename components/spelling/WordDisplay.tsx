@@ -1,13 +1,17 @@
+'use client';
 /*
  * @Date: 2025-10-26 10:02:44
- * @LastEditTime: 2025-11-04 20:06:35
- * @Description: 单词拼写显示区域 (修改错题本逻辑)
+ * @LastEditTime: 2025-11-06 19:52:47
+ * @Description: 单词拼写显示区域 (监听全局 setting)
+ * [!! 已更新 !!]
+ * 1. 允许用户手动输入撇号 (') 并进行校验。
+ * 2. 自动跳过空格 ( )。
+ * 3. 校验逻辑现在严格区分大小写。
  */
-'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import DefinitionDisplay from '../common/DefinitionDisplay';
-import PronunciationDisplay from '../common/PronunciationDisplay';
+import DefinitionDisplay from '@/components/common/DefinitionDisplay';
+import PronunciationDisplay from '@/components/common/PronunciationDisplay';
 import { useSpelling } from '@/contexts/spelling.context';
 import { useSpeechPlayer } from '@/hooks/useSpeechPlayer';
 import {
@@ -18,8 +22,18 @@ import {
 } from '@/utils/word.utils';
 import { SpeechOptions } from '@/utils/speech.utils';
 import { AccentType } from '@/types/word.types';
-import { Sen } from 'next/font/google';
-import SentenceDisplay from '../common/SentenceDisplay';
+import SentenceDisplay from '@/components/common/SentenceDisplay';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// [!!] 定义哪些是用户必须输入的
+const isInputtableChar = (char: string): boolean => {
+  return /[a-zA-Z']/.test(char); // 字母 和 撇号
+};
+
+// [!!] 定义哪些是自动跳过的
+const isSkippableChar = (char: string): boolean => {
+  return char === ' '; // 仅空格
+};
 
 export default function WordDisplay() {
   const {
@@ -32,15 +46,16 @@ export default function WordDisplay() {
     displayMode,
     updateWordProgressInContext,
     setHasMadeMistake,
+    showSentences,
+    showSentenceTranslation,
   } = useSpelling();
 
   const { speak, isPlaying } = useSpeechPlayer();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ... (sfx 音效和 playSound 函数保持不变) ...
   const successSfx =
     typeof window !== 'undefined' ? new Audio('/sfx/success.mp3') : null;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const errorSfx =
     typeof window !== 'undefined' ? new Audio('/sfx/failed.wav') : null;
 
@@ -62,6 +77,20 @@ export default function WordDisplay() {
   // --- 引用 (不变) ---
   const wordContainerRef = useRef<HTMLDivElement>(null);
   const prevWordRef = useRef<string>(currentWord?.text || '');
+
+  // [!!] 查找下一个“可输入”的字符 (不变)
+  const findNextInputtablePosition = useCallback(
+    (word: string, startIndex: number): number => {
+      if (!word) return 0;
+      for (let i = startIndex; i < word.length; i++) {
+        if (isInputtableChar(word[i])) {
+          return i;
+        }
+      }
+      return word.length;
+    },
+    []
+  );
 
   // --- 核心逻辑：状态重置 (不变) ---
   const resetInputState = useCallback(
@@ -121,16 +150,12 @@ export default function WordDisplay() {
     speak(configToPlay);
   }, [currentWord, isPlaying, speechConfig, speechSupported, speak]);
 
-  // --- [!!! 修改 !!!] 拼写逻辑函数 ---
-
+  // --- 拼写逻辑函数 (不变) ---
   const handleSuccess = useCallback(async () => {
     playSound(successSfx);
     setIsComplete(true);
-    setHasMadeMistake(false); // [!!! 新增 !!!] 拼对了，清除犯错标记
-
-    // [保留] 拼写成功，通知后端
-    updateWordProgressInContext(5); // 5 = 质量高
-
+    setHasMadeMistake(false);
+    updateWordProgressInContext(5);
     incrementCorrectCount();
     setTimeout(() => {
       handleNext();
@@ -140,34 +165,33 @@ export default function WordDisplay() {
     updateWordProgressInContext,
     incrementCorrectCount,
     handleNext,
-    setHasMadeMistake, // [!!! 新增 !!!]
+    setHasMadeMistake,
   ]);
 
   const handleFailure = useCallback(async () => {
     playSound(errorSfx);
     setIsError(true);
-
-    // [!!! 修改 !!!]
-    // 不再调用 handleWordFailure()
-    // handleWordFailure(); [!!! 移除 !!!]
-
-    // [!!! 新增 !!!]
-    // 只设置“犯错”标记
     setHasMadeMistake(true);
-
+    updateWordProgressInContext(1);
     wordContainerRef.current?.classList.add('shake');
     setTimeout(() => {
       resetInputState(false);
+      if (currentWord?.text) {
+        setCurrentPosition(findNextInputtablePosition(currentWord.text, 0));
+      }
       playCurrentWord();
     }, 1000);
   }, [
     errorSfx,
-    setHasMadeMistake, // [!!! 修改 !!!]
+    setHasMadeMistake,
+    updateWordProgressInContext,
     playCurrentWord,
     resetInputState,
+    currentWord?.text,
+    findNextInputtablePosition,
   ]);
 
-  // --- 键盘输入监听 (不变) ---
+  // --- 键盘输入监听 (修改) ---
   const handleInputKeyPress = useCallback(
     (e: KeyboardEvent) => {
       if (
@@ -177,12 +201,12 @@ export default function WordDisplay() {
         e.metaKey ||
         e.altKey ||
         !currentWord?.text ||
-        !/^[a-zA-Z]$/.test(e.key)
+        !/^[a-zA-Z']$/.test(e.key) // 允许字母和撇号
       )
         return;
 
-      const inputChar = e.key.toLowerCase();
-      const targetChar = currentWord.text[currentPosition]?.toLowerCase();
+      const inputChar = e.key; // [!!] 保持大小写
+      const targetChar = currentWord.text[currentPosition]; // [!!] 目标字符
 
       if (!targetChar) return;
 
@@ -190,10 +214,28 @@ export default function WordDisplay() {
       newInput[currentPosition] = inputChar;
       setUserInput(newInput);
 
-      if (inputChar === targetChar) {
-        const nextPosition = currentPosition + 1;
-        setCurrentPosition(nextPosition);
-        if (nextPosition === currentWord.text.length) {
+      // [!! 关键修改 !!]
+      // 移除所有 .toLowerCase()，进行严格的大小写匹配
+      const isMatch = inputChar === targetChar;
+
+      if (isMatch) {
+        // [!!] 答对了！查找下一个 *可输入* 的位置
+        const nextInputtablePos = findNextInputtablePosition(
+          currentWord.text,
+          currentPosition + 1
+        );
+
+        // [!!] 自动填充所有中间 *可跳过* 的字符（即空格）
+        for (let i = currentPosition + 1; i < nextInputtablePos; i++) {
+          newInput[i] = currentWord.text[i];
+        }
+        setUserInput(newInput); // 再次更新 state 以包含跳过的字符
+
+        // [!!] 光标跳到下一个可输入的位置
+        setCurrentPosition(nextInputtablePos);
+
+        // [!!] 检查是否已完成
+        if (nextInputtablePos === currentWord.text.length) {
           handleSuccess();
         }
       } else {
@@ -208,16 +250,17 @@ export default function WordDisplay() {
       isComplete,
       isError,
       userInput,
+      findNextInputtablePosition,
     ]
   );
 
-  // --- Effect Hooks (修改) ---
+  // --- Effect Hooks (不变) ---
   useEffect(() => {
     if (currentWord?.text && currentWord.text !== prevWordRef.current) {
       resetInputState(true);
-      setHasMadeMistake(false); // [!!! 新增 !!!] 切换单词时，重置犯错标记
+      setCurrentPosition(findNextInputtablePosition(currentWord.text, 0));
+      setHasMadeMistake(false);
       prevWordRef.current = currentWord.text;
-
       const shouldPlay = speechSupported;
       if (shouldPlay) {
         playNewWordPronunciation();
@@ -230,7 +273,8 @@ export default function WordDisplay() {
     resetInputState,
     speechSupported,
     playNewWordPronunciation,
-    setHasMadeMistake, // [!!! 新增 !!!]
+    setHasMadeMistake,
+    findNextInputtablePosition,
   ]);
 
   useEffect(() => {
@@ -239,9 +283,8 @@ export default function WordDisplay() {
     return () => window.removeEventListener('keydown', keyPressHandler);
   }, [handleInputKeyPress]);
 
-  // --- 渲染逻辑 (不变) ---
+  // --- 渲染逻辑 (修改) ---
   const renderWord = (word: string) => {
-    // ... (内部代码无变化)
     if (!word) return null;
     const chars = word.split('');
 
@@ -254,10 +297,34 @@ export default function WordDisplay() {
       >
         {chars.map((char, index) => {
           const isEntered = index < currentPosition;
-          const isCorrect =
-            isEntered && userInput[index]?.toLowerCase() === char.toLowerCase();
+
+          // [!!] 1. 如果是“可跳过”的字符 (空格)
+          if (isSkippableChar(char)) {
+            const displayChar = char === ' ' ? '&nbsp;' : char;
+
+            const colorClass = isEntered
+              ? 'text-green-500 dark:text-green-300' // 已跳过 -> 绿色
+              : 'text-gray-400 dark:text-gray-600'; // 未到达 -> 灰色
+
+            return (
+              <span
+                key={index}
+                className={`text-5xl sm:text-7xl ${colorClass}`}
+                dangerouslySetInnerHTML={{ __html: displayChar }}
+              />
+            );
+          }
+
+          // [!!] 2. 如果是“可输入”的字符 (字母或撇号)
           const isCurrent = index === currentPosition;
           const hasError = isError && isCurrent;
+
+          // [!! 关键修改 !!]
+          // 移除 .toLowerCase()，进行严格的大小写匹配
+          let isCorrect = false;
+          if (isEntered) {
+            isCorrect = userInput[index] === char;
+          }
 
           let colorClass = 'text-gray-400 dark:text-gray-600';
           if (isEntered)
@@ -275,7 +342,7 @@ export default function WordDisplay() {
           return (
             <span
               key={index}
-              className={`text-5xl sm:text-7xl  tracking-tight ${colorClass}`}
+              className={`text-5xl sm:text-7xl tracking-tight ${colorClass}`}
             >
               {charToShow}
             </span>
@@ -285,8 +352,8 @@ export default function WordDisplay() {
     );
   };
 
+  // --- 播放逻辑 (不变) ---
   const playWordPronunciation = (type: 'uk' | 'us' | null = null) => {
-    // ... (内部代码无变化)
     if (
       !speechSupported ||
       isPlaying ||
@@ -359,6 +426,34 @@ export default function WordDisplay() {
       />
 
       <DefinitionDisplay definitions={currentWord?.definitions} />
+
+      <AnimatePresence>
+        {showSentences &&
+          currentWord?.examples.general &&
+          currentWord.examples.general.length > 0 && (
+            <motion.div
+              className="w-full overflow-hidden"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{
+                opacity: 1,
+                height: 'auto',
+              }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+            >
+              <div className="mt-4">
+                <SentenceDisplay
+                  sentences={currentWord?.examples.general}
+                  showTranslation={showSentenceTranslation}
+                />
+              </div>
+            </motion.div>
+          )}
+      </AnimatePresence>
+
+      {!showSentences &&
+        currentWord?.examples.general &&
+        currentWord.examples.general.length > 0 && <div className="h-10" />}
     </div>
   );
 }

@@ -1,3 +1,8 @@
+/*
+ * @Date: 2025-11-03 13:30:05
+ * @LastEditTime: 2025-11-07 09:49:56
+ * @Description: 
+ */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -160,7 +165,10 @@ const PlanWordsModal: React.FC<PlanWordsModalProps> = ({
                               exit="collapsed"
                               className="overflow-hidden"
                             >
-                              <ul className="divide-y divide-gray-200 dark:divide-gray-600 max-h-60 overflow-y-auto">
+                              {/* [!! 核心修改 !!] 
+                                  - 将 max-h-60 (240px) 增加到 max-h-96 (384px)
+                              */}
+                              <ul className="divide-y divide-gray-200 dark:divide-gray-600 max-h-96 overflow-y-auto">
                                 {dayPlan.words.map((word) => (
                                   <li
                                     key={word.id}

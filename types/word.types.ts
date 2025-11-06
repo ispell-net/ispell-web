@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 09:55:11
- * @LastEditTime: 2025-11-02 22:58:39
+ * @LastEditTime: 2025-11-06 23:45:38
  * @Description: 单词学习相关类型定义
  */
 
@@ -161,4 +161,16 @@ export interface SpellingContextType {
   resetTimer: () => void; // 重置计时器
   incrementInputCount: () => void; // 增加总输入次数
   incrementCorrectCount: () => void; // 增加正确输入次数
+}
+
+/**
+ * [!! 建议新增 !!]
+ * 简化的单词类型（用于API返回）
+ * 描述：包含单词、释义和发音等核心信息
+ */
+export interface SimpleWord {
+  id: number;
+  word: string; // 单词原文 (来自 Prisma 的 'text' 字段)
+  definitions: Definition[]; // 或更具体的 Definition[]，来自 JSON 字段
+  pronunciation: Pronunciation; // 或更具体的 PronunciationType，来自 JSON 字段
 }

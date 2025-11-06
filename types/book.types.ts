@@ -14,6 +14,8 @@ export interface Book {
   name: string; // 书籍名称（如"大学英语四级核心词汇"）
   totalWords: number; // 书籍包含的总单词数
   description: string | null; // 书籍描述（可选，介绍书籍特点、适用人群等）
+  tags: string[] | null; // [!! 新增 !!] 标签数组 (例如 ['四级', '六级'])
+  order: number;
 }
 
 /**
@@ -26,6 +28,7 @@ export interface Category {
   name: string; // 分类名称（如"英语考试系列"）
   description: string | null; // 分类描述（可选，介绍分类包含的书籍类型）
   wordLists: Book[]; // 该分类下的所有书籍（L3层级集合）
+  order: number;
 }
 
 /**
@@ -38,6 +41,7 @@ export interface Language {
   name: string; // 语言全称（如"英语"、"日语"）
   shortName: string; // 语言简称（如"英"、"日"，用于UI紧凑展示）
   categories: Category[]; // 该语言下的所有分类（L2层级集合）
+  order: number;
 }
 
 /**

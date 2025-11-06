@@ -171,7 +171,7 @@
     "sectionTitles": {
       "speechSettings": "語音設定",
       "displaySettings": "單詞隱藏",
-      "contentSettings": "內容顯示"
+      "sentenceSettings": "內容顯示"
     },
     "labels": {
       "speechSource": "發音源",

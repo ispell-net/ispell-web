@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-28 22:05:53
- * @LastEditTime: 2025-11-04 16:17:29
- * @Description: AppContext，已添加 refreshUser 和 OAuth 绑定监听器
+ * @LastEditTime: 2025-11-04 22:40:59
+ * @Description: AppContext (已添加错题集复习功能)
  */
 'use client';
 
@@ -18,7 +18,7 @@ import type { PlanDetails, Language, LearningPlan } from '@/types/book.types';
 import { fetchBookHierarchy } from '@/services/bookService';
 import { fetchLearningList } from '@/services/planService';
 import { Tokens, User } from '@/types/auth.types';
-// [新] 导入 apiFetchProfile 和 OAuth 常量
+import { Word } from '@/types/word.types'; // [!! 新增 !!] 导入 Word 类型
 import { apiFetchProfile, EXPECTED_OAUTH_ORIGIN } from '@/services/authService';
 import toast from 'react-hot-toast';
 
@@ -31,7 +31,13 @@ export interface LearningTrigger {
   action: LearningAction;
 }
 
-// 上下文接口定义（新增 refreshUser）
+// [!! 新增 !!] 错题集复习触发器类型
+export type MistakeReviewTrigger = {
+  planId: number;
+  words: Word[]; // 这些是错题集服务获取的单词
+} | null;
+
+// 上下文接口定义
 interface IAppContext {
   // 认证
   user: User | null;
@@ -39,8 +45,8 @@ interface IAppContext {
   accessToken: string | null;
   login: (userData: User, tokens: Tokens, rememberMe: boolean) => void;
   logout: () => void;
-  refreshUser: () => Promise<void>; // [新] 刷新用户信息
-  isLoading: boolean; // [新] 添加一个顶层 isLoading
+  refreshUser: () => Promise<void>;
+  isLoading: boolean;
   // 弹窗
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
@@ -61,6 +67,9 @@ interface IAppContext {
   isLearningSessionActive: boolean;
   startLearningSession: () => void;
   endLearningSession: () => void;
+  // [!! 新增 !!] 错题集复习
+  mistakeReviewTrigger: MistakeReviewTrigger;
+  startMistakeReview: (planId: number, words: Word[]) => void;
   // 数据状态
   hierarchy: Language[];
   learningList: LearningPlan[];
@@ -81,12 +90,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isBookDrawerOpen, setIsBookDrawerOpen] = useState<boolean>(false);
   const isLoggedIn = !!user && !!accessToken;
-  const [isLoading, setIsLoading] = useState(true); // [新] 顶层加载状态
+  const [isLoading, setIsLoading] = useState(true);
 
   // --- 学习状态/数据 ---
   const [currentBookId, setCurrentBookId] = useState<string | null>(null);
   const [learningTrigger, setLearningTrigger] =
     useState<LearningTrigger | null>(null);
+  // [!! 新增 !!] 错题集状态
+  const [mistakeReviewTrigger, setMistakeReviewTrigger] =
+    useState<MistakeReviewTrigger>(null);
   const [isLearningSessionActive, setIsLearningSessionActive] = useState(false);
 
   // 数据状态
@@ -190,6 +202,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.log('[AppContext] loadBook triggered:', listCode, action);
       setCurrentBookId(listCode);
       setLearningTrigger({ listCode, action });
+      setMistakeReviewTrigger(null); // [!! 新增 !!] 清空错题集触发器
     },
     []
   );
@@ -200,6 +213,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.log('[AppContext] Starting learning session...');
       setIsLearningSessionActive(true);
       setLearningTrigger({ listCode: currentBookId, action: 'activate' });
+      setMistakeReviewTrigger(null); // [!! 新增 !!] 清空错题集触发器
     } else {
       console.warn('[AppContext] Cannot start session: no active book.');
       setIsBookDrawerOpen(true);
@@ -209,8 +223,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const endLearningSession = useCallback(() => {
     console.log('[AppContext] Ending learning session...');
     setIsLearningSessionActive(false);
+    setMistakeReviewTrigger(null); // [!! 新增 !!] 清空错题集触发器
     refreshAllData();
   }, [refreshAllData]);
+
+  // [!! 新增 !!] 错题集复习启动函数
+  const startMistakeReview = useCallback(
+    (planId: number, words: Word[]) => {
+      if (words.length === 0) {
+        toast.error('错题集是空的。');
+        return;
+      }
+      console.log(`[AppContext] Starting mistake review for plan ${planId}`);
+
+      // 1. 设置错题集触发器
+      setMistakeReviewTrigger({ planId, words });
+      // 2. 清空常规学习触发器，避免冲突
+      setLearningTrigger(null);
+      // 3. 激活学习会话
+      setIsLearningSessionActive(true);
+
+      // 4. (重要) 确保 currentBookId 与计划匹配
+      const plan = learningList.find((p) => p.planId === planId);
+      if (plan && plan.listCode !== currentBookId) {
+        setCurrentBookId(plan.listCode);
+        // 注意：setCurrentBookId 会触发 localStorage 写入 (在 useEffect 中)
+      }
+    },
+    [learningList, currentBookId] // 依赖 learningList 和 currentBookId
+  );
 
   // --- 登录逻辑 ---
   const login = useCallback(
@@ -228,7 +269,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setCurrentBookId(storedBookId);
       }
     },
-    [] // 移除依赖
+    []
   );
 
   // --- 登出逻辑 ---
@@ -244,12 +285,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('currentBookId');
     setCurrentBookId(null);
     setLearningTrigger(null);
+    setMistakeReviewTrigger(null); // [!! 新增 !!]
     setIsLearningSessionActive(false);
     setLearningList([]);
     setDataError(null);
     closeLoginModal();
     closeRegisterModal();
-  }, []); // 移除依赖
+  }, []);
 
   // --- [新] OAuth 绑定/登录 回调监听器 ---
   useEffect(() => {
@@ -291,7 +333,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       window.removeEventListener('message', handleOAuthMessage);
     };
-  }, [isLoggedIn, login, refreshUser]); // 依赖 isLoggedIn, login, refreshUser
+  }, [isLoggedIn, login, refreshUser]);
 
   // --- 初始化 ---
   useEffect(() => {
@@ -376,7 +418,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setCurrentBookId(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]); // 依赖 accessToken
+  }, [accessToken]);
 
   // --- 主题变化同步 ---
   useEffect(() => {
@@ -410,8 +452,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       accessToken,
       login,
       logout,
-      refreshUser, // [新] 导出
-      isLoading, // [新] 导出
+      refreshUser,
+      isLoading,
       theme,
       setTheme,
       isLoginModalOpen,
@@ -429,6 +471,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isLearningSessionActive,
       startLearningSession,
       endLearningSession,
+      // [!! 新增 !!]
+      mistakeReviewTrigger,
+      startMistakeReview,
+      //
       hierarchy,
       learningList,
       isDataLoading,
@@ -443,8 +489,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       accessToken,
       login,
       logout,
-      refreshUser, // [新]
-      isLoading, // [新]
+      refreshUser,
+      isLoading,
       theme,
       isLoginModalOpen,
       isRegisterModalOpen,
@@ -455,6 +501,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isLearningSessionActive,
       startLearningSession,
       endLearningSession,
+      // [!! 新增 !!]
+      mistakeReviewTrigger,
+      startMistakeReview,
+      //
       hierarchy,
       learningList,
       isDataLoading,

@@ -1,10 +1,20 @@
 'use client';
+/*
+ * @Date: 2025-10-30 10:24:15
+ * @LastEditTime: 2025-11-06 23:44:09
+ * @Description: 学习计划设置视图 ([!! 已修改 !!] 限制每日单词数最大值 + 添加单词列表)
+ */
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
 import { useAppContext } from '@/contexts/app.context';
+// [!! 修改 !!] 导入 Book 和 PlanDetails (根据您的类型文件)
 import type { Book, PlanDetails } from '@/types/book.types';
+
+// [!! 1. 新增导入 !!]
+import { List } from 'lucide-react'; // 导入图标
+import BookWordsModal from './BookWordsModal'; // 导入新模态框 (请检查路径)
 
 /** 预设的计划天数 */
 const PRESET_DAYS = [15, 30, 45, 60, 75, 90];
@@ -23,7 +33,7 @@ const REVIEW_STRATEGIES: Array<{ id: ReviewStrategyId; recommended: boolean }> =
 
 /** 计划设置视图的 Props */
 interface PlanSetupViewProps {
-  book: Book;
+  book: Book; // [!!] 此类型来自您提供的文件
   onStart: (plan: PlanDetails) => void;
   onCancel: () => void;
   initialPlan?: PlanDetails | null;
@@ -38,7 +48,11 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
   const { isLoggedIn, openLoginModal } = useAppContext();
   const t = useTranslations('BookSelection');
 
+  // [!! 2. 新增状态 !!]
+  const [isWordModalOpen, setIsWordModalOpen] = useState(false);
+
   // --- 状态管理 ---
+  // (这些类型 'preset' 等完全匹配您提供的 PlanDetails 类型)
   const [planType, setPlanType] = useState<
     'preset' | 'customDays' | 'customWords'
   >(initialPlan?.type || 'preset');
@@ -90,10 +104,11 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
     }
   }, [initialPlan]);
 
-  // --- 处理数字输入 ---
+  // --- [!! 1. 修改 !!] 处理数字输入 (增加 max 参数) ---
   const handleNumericChange = (
     setter: React.Dispatch<React.SetStateAction<string>>,
-    value: string
+    value: string,
+    max: number | undefined = undefined // 增加可选的 max 参数
   ) => {
     if (value === '') {
       setter('');
@@ -101,8 +116,14 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
     }
     const num = parseInt(value, 10);
     if (!isNaN(num) && num > 0) {
-      setter(num.toString());
+      // 检查是否超过最大值
+      if (max !== undefined && num > max) {
+        setter(max.toString()); // 如果超过，则设置为最大值
+      } else {
+        setter(num.toString()); // 否则，设置为有效值
+      }
     }
+    // 忽略 0 或无效输入
   };
 
   // --- 计算派生数据 ---
@@ -138,7 +159,8 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
       planBase = { type: 'customDays', value: daysNum };
     } else {
       const wordsNum = Number(customWords);
-      if (isNaN(wordsNum) || wordsNum <= 0) {
+      if (isNaN(wordsNum) || wordsNum <= 0 || wordsNum > book.totalWords) {
+        // [!!] 增加校验
         toast.error(t('PlanSetupView.errors.invalidCustomWords'));
         return;
       }
@@ -166,227 +188,265 @@ const PlanSetupView: React.FC<PlanSetupViewProps> = ({
     : t('PlanSetupView.buttons.loginToCreate');
 
   return (
-    <div className="flex flex-col p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-      {/* 标题 */}
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        {isEditing
-          ? t('PlanSetupView.titles.editPlan', { bookName: book.name })
-          : t('PlanSetupView.titles.createPlan', { bookName: book.name })}
-      </h3>
+    // [!! 3. 添加 Fragment 容器 !!]
+    <>
+      {/* 样式保持上一次修改的结果 (带边框和背景) */}
+      <div className="flex flex-col p-4 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+        {/* [!! 4. 修改标题区域 !!] */}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isEditing
+              ? t('PlanSetupView.titles.editPlan', { bookName: book.name })
+              : t('PlanSetupView.titles.createPlan', { bookName: book.name })}
+          </h3>
 
-      {/* 预设计划选择 */}
-      <section>
-        <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
-          {t('PlanSetupView.sectionTitles.generalPlan')}
-        </h4>
-        <div className="grid grid-cols-3 gap-3">
-          {PRESET_DAYS.map((days) => (
-            <button
-              key={days}
-              onClick={() => {
-                setPlanType('preset');
-                setPresetDays(days);
-              }}
-              className={`
+          {/* [!! 5. 新增按钮 !!] */}
+          <button
+            onClick={() => setIsWordModalOpen(true)}
+            className="flex items-center px-3 py-1 text-xs rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+            // 提示：您需要添加 "PlanSetupView.buttons.viewWords" 到您的语言包
+            title={t('PlanSetupView.buttons.viewWords', {
+              count: book.totalWords,
+            })}
+          >
+            <List className="w-3 h-3 mr-1.5" />
+            {t('PlanSetupView.buttons.viewWords', {
+              count: book.totalWords, // [!!] 使用 book.totalWords
+            })}
+          </button>
+        </div>
+
+        {/* 预设计划选择 */}
+        <section>
+          <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
+            {t('PlanSetupView.sectionTitles.generalPlan')}
+          </h4>
+          <div className="grid grid-cols-3 gap-3">
+            {PRESET_DAYS.map((days) => (
+              <button
+                key={days}
+                onClick={() => {
+                  setPlanType('preset');
+                  setPresetDays(days);
+                }}
+                className={`
                 p-3 rounded-lg border-2 text-center transition-colors
                 ${
                   planType === 'preset' && presetDays === days
-                    ? 'bg-gray-200 border-gray-400 dark:bg-gray-700 dark:border-gray-500'
-                    : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                    ? 'bg-gray-200 border-gray-400 dark:bg-gray-500 dark:border-gray-400'
+                    : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                 }
               `}
+              >
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {`${days} ${t('PlanSetupView.presetPlan.dayUnit')}`}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {days > 0
+                    ? t('PlanSetupView.presetPlan.wordsPerDay', {
+                        count: Math.ceil(book.totalWords / days),
+                      })
+                    : '-'}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* 自定义计划设置 */}
+        <section className="mt-6">
+          <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
+            {t('PlanSetupView.sectionTitles.customPlan')}
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 自定义天数 */}
+            <div
+              onClick={() => setPlanType('customDays')}
+              className="p-3 rounded-lg border dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-800"
+            >
+              <div className="flex items-center justify-between">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="planType"
+                    readOnly
+                    checked={planType === 'customDays'}
+                    className="form-radio text-gray-900 dark:text-gray-100"
+                  />
+                  <span className="ml-2 font-medium text-gray-800 dark:text-gray-100">
+                    {t('PlanSetupView.customPlan.customDays')}
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  value={customDays}
+                  onChange={(e) =>
+                    // [!! 修改 !!] 不传递 max
+                    handleNumericChange(setCustomDays, e.target.value)
+                  }
+                  onFocus={() => setPlanType('customDays')}
+                  disabled={planType !== 'customDays'}
+                  className="w-28 text-center p-1 rounded bg-gray-200 dark:bg-gray-600 disabled:opacity-50"
+                  placeholder={t('PlanSetupView.placeholders.days')}
+                  min="1"
+                />
+              </div>
+              {planType === 'customDays' && wordsPerDay > 0 && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  {t('PlanSetupView.customPlan.wordsPerDay', {
+                    count: wordsPerDay,
+                  })}
+                </p>
+              )}
+            </div>
+
+            {/* 自定义每日单词数 */}
+            <div
+              onClick={() => setPlanType('customWords')}
+              className="p-3 rounded-lg border dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-800"
+            >
+              <div className="flex items-center justify-between">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="planType"
+                    readOnly
+                    checked={planType === 'customWords'}
+                    className="form-radio text-gray-900 dark:text-gray-100"
+                  />
+                  <span className="ml-2 font-medium text-gray-800 dark:text-gray-100">
+                    {t('PlanSetupView.customPlan.dailyWords')}
+                  </span>
+                </label>
+                {/* [!! 2. 修改 !!] 添加 max 属性并更新 onChange */}
+                <input
+                  type="number"
+                  value={customWords}
+                  onChange={(e) =>
+                    handleNumericChange(
+                      setCustomWords,
+                      e.target.value,
+                      book.totalWords // [!!] 使用 book.totalWords
+                    )
+                  }
+                  onFocus={() => setPlanType('customWords')}
+                  disabled={planType !== 'customWords'}
+                  className="w-28 text-center p-1 rounded bg-gray-200 dark:bg-gray-600 disabled:opacity-50"
+                  placeholder={t('PlanSetupView.placeholders.words')}
+                  min="1"
+                  max={book.totalWords} // [!!] 使用 book.totalWords
+                />
+              </div>
+              {planType === 'customWords' && totalDays > 0 && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  {t('PlanSetupView.customPlan.totalDays', {
+                    count: totalDays,
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 学习顺序选择 */}
+        <section className="mt-6">
+          <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
+            {t('PlanSetupView.sectionTitles.learningOrder')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setLearningOrder('SEQUENTIAL')}
+              className={`p-3 rounded-lg border-2 text-center transition-colors ${
+                learningOrder === 'SEQUENTIAL'
+                  ? 'bg-gray-200 border-gray-400 dark:bg-gray-500 dark:border-gray-400'
+                  : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              }`}
             >
               <p className="font-medium text-gray-900 dark:text-white">
-                {`${days} ${t('PlanSetupView.presetPlan.dayUnit')}`}
+                {t('PlanSetupView.learningOrder.sequential.name')}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {days > 0
-                  ? t('PlanSetupView.presetPlan.wordsPerDay', {
-                      count: Math.ceil(book.totalWords / days),
-                    })
-                  : '-'}
+                {t('PlanSetupView.learningOrder.sequential.desc')}
               </p>
             </button>
-          ))}
-        </div>
-      </section>
-
-      {/* 自定义计划设置 */}
-      <section className="mt-6">
-        <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
-          {t('PlanSetupView.sectionTitles.customPlan')}
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* 自定义天数 */}
-          <div
-            onClick={() => setPlanType('customDays')}
-            className="p-3 rounded-lg border dark:border-gray-700 cursor-pointer bg-white dark:bg-gray-800"
-          >
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="planType"
-                  readOnly
-                  checked={planType === 'customDays'}
-                  className="form-radio text-gray-900 dark:text-gray-100"
-                />
-                <span className="ml-2 font-medium text-gray-800 dark:text-gray-100">
-                  {t('PlanSetupView.customPlan.customDays')}
-                </span>
-              </label>
-              <input
-                type="number"
-                value={customDays}
-                onChange={(e) =>
-                  handleNumericChange(setCustomDays, e.target.value)
-                }
-                onFocus={() => setPlanType('customDays')}
-                disabled={planType !== 'customDays'}
-                className="w-28 text-center p-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50"
-                placeholder={t('PlanSetupView.placeholders.days')}
-                min="1"
-              />
-            </div>
-            {planType === 'customDays' && wordsPerDay > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {t('PlanSetupView.customPlan.wordsPerDay', {
-                  count: wordsPerDay,
-                })}
+            <button
+              onClick={() => setLearningOrder('RANDOM')}
+              className={`p-3 rounded-lg border-2 text-center transition-colors ${
+                learningOrder === 'RANDOM'
+                  ? 'bg-gray-200 border-gray-400 dark:bg-gray-500 dark:border-gray-400'
+                  : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              }`}
+            >
+              <p className="font-medium text-gray-900 dark:text-white">
+                {t('PlanSetupView.learningOrder.random.name')}
               </p>
-            )}
-          </div>
-
-          {/* 自定义每日单词数 */}
-          <div
-            onClick={() => setPlanType('customWords')}
-            className="p-3 rounded-lg border dark:border-gray-700 cursor-pointer bg-white dark:bg-gray-800"
-          >
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="planType"
-                  readOnly
-                  checked={planType === 'customWords'}
-                  className="form-radio text-gray-900 dark:text-gray-100"
-                />
-                <span className="ml-2 font-medium text-gray-800 dark:text-gray-100">
-                  {t('PlanSetupView.customPlan.dailyWords')}
-                </span>
-              </label>
-              <input
-                type="number"
-                value={customWords}
-                onChange={(e) =>
-                  handleNumericChange(setCustomWords, e.target.value)
-                }
-                onFocus={() => setPlanType('customWords')}
-                disabled={planType !== 'customWords'}
-                className="w-28 text-center p-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50"
-                placeholder={t('PlanSetupView.placeholders.words')}
-                min="1"
-              />
-            </div>
-            {planType === 'customWords' && totalDays > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {t('PlanSetupView.customPlan.totalDays', { count: totalDays })}
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t('PlanSetupView.learningOrder.random.desc')}
               </p>
-            )}
+            </button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 学习顺序选择 */}
-      <section className="mt-6">
-        <h4 className="text-base font-semibold text-gray-600 dark:text-gray-300 mb-3">
-          {t('PlanSetupView.sectionTitles.learningOrder')}
-        </h4>
-        <div className="grid grid-cols-2 gap-3">
+        {/* 复习策略选择 */}
+        <section className="mt-6 space-y-3">
+          <div className="flex items-center">
+            <label
+              htmlFor="reviewStrategy"
+              className="text-base font-semibold text-gray-600 dark:text-gray-300"
+            >
+              {t('PlanSetupView.sectionTitles.reviewStrategy')}
+            </label>
+          </div>
+          <select
+            id="reviewStrategy"
+            value={reviewStrategy}
+            onChange={(e) =>
+              setReviewStrategy(e.target.value as ReviewStrategyId)
+            }
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            {REVIEW_STRATEGIES.map((strategy) => (
+              <option key={strategy.id} value={strategy.id}>
+                {strategy.recommended
+                  ? `${t(
+                      `PlanSetupView.reviewStrategies.${strategy.id}.name`
+                    )} (${t('PlanSetupView.reviewStrategies.recommended')})`
+                  : t(`PlanSetupView.reviewStrategies.${strategy.id}.name`)}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 dark:text-gray-400 px-1">
+            {currentStrategyDescription}
+          </p>
+        </section>
+
+        {/* 操作按钮 */}
+        <div className="pt-8 flex space-x-3">
+          {/* 取消按钮 */}
           <button
-            onClick={() => setLearningOrder('SEQUENTIAL')}
-            className={`p-3 rounded-lg border-2 text-center transition-colors ${
-              learningOrder === 'SEQUENTIAL'
-                ? 'bg-gray-200 border-gray-400 dark:bg-gray-700 dark:border-gray-500'
-                : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
-            }`}
+            onClick={onCancel}
+            className="flex-1 py-3 rounded-lg bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100 font-medium transition-colors hover:bg-gray-300 dark:hover:bg-gray-500"
           >
-            <p className="font-medium text-gray-900 dark:text-white">
-              {t('PlanSetupView.learningOrder.sequential.name')}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t('PlanSetupView.learningOrder.sequential.desc')}
-            </p>
+            {t('PlanSetupView.buttons.cancel')}
           </button>
+          {/* 确认/登录按钮 */}
           <button
-            onClick={() => setLearningOrder('RANDOM')}
-            className={`p-3 rounded-lg border-2 text-center transition-colors ${
-              learningOrder === 'RANDOM'
-                ? 'bg-gray-200 border-gray-400 dark:bg-gray-700 dark:border-gray-500'
-                : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
-            }`}
+            onClick={handleConfirmClick}
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300`}
           >
-            <p className="font-medium text-gray-900 dark:text-white">
-              {t('PlanSetupView.learningOrder.random.name')}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t('PlanSetupView.learningOrder.random.desc')}
-            </p>
+            {confirmButtonText}
           </button>
         </div>
-      </section>
-
-      {/* 复习策略选择 */}
-      <section className="mt-6 space-y-3">
-        <div className="flex items-center">
-          <label
-            htmlFor="reviewStrategy"
-            className="text-base font-semibold text-gray-600 dark:text-gray-300"
-          >
-            {t('PlanSetupView.sectionTitles.reviewStrategy')}
-          </label>
-        </div>
-        <select
-          id="reviewStrategy"
-          value={reviewStrategy}
-          onChange={(e) =>
-            setReviewStrategy(e.target.value as ReviewStrategyId)
-          }
-          className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          {REVIEW_STRATEGIES.map((strategy) => (
-            <option key={strategy.id} value={strategy.id}>
-              {strategy.recommended
-                ? `${t(
-                    `PlanSetupView.reviewStrategies.${strategy.id}.name`
-                  )} (${t('PlanSetupView.reviewStrategies.recommended')})`
-                : t(`PlanSetupView.reviewStrategies.${strategy.id}.name`)}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-gray-500 dark:text-gray-400 px-1">
-          {currentStrategyDescription}
-        </p>
-      </section>
-
-      {/* 操作按钮（核心修改：增大背景色差别） */}
-      <div className="pt-8 flex space-x-3">
-        {/* 取消按钮（保持原有样式） */}
-        <button
-          onClick={onCancel}
-          className="flex-1 py-3 rounded-lg bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 font-medium transition-colors hover:bg-gray-300 dark:hover:bg-gray-600"
-        >
-          {t('PlanSetupView.buttons.cancel')}
-        </button>
-        {/* 确认/登录按钮（核心样式修改） */}
-        <button
-          onClick={handleConfirmClick}
-          className={`flex-1 py-3 rounded-lg font-medium transition-colors bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300`}
-        >
-          {confirmButtonText}
-        </button>
       </div>
-    </div>
+
+      {/* [!! 6. 渲染新模态框 !!] */}
+      <BookWordsModal
+        isOpen={isWordModalOpen}
+        onClose={() => setIsWordModalOpen(false)}
+        listCode={book.listCode} // [!!] 使用 book.listCode
+        bookName={book.name} // [!!] 使用 book.name
+      />
+    </>
   );
 };
 

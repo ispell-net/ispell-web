@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 09:43:47
- * @LastEditTime: 2025-11-01 18:19:36
+ * @LastEditTime: 2025-11-05 17:09:52
  * @Description: 英文单词处理通用工具
  */
 
@@ -137,4 +137,80 @@ export function getAllIndices(word: string): number[] {
 
   // 生成0到length-1的索引数组
   return Array.from({ length }, (_, index) => index);
+}
+
+/**
+ * 转义正则表达式中的特殊字符（如 . * + ? $ ^ ( ) [ ] { } | \ 等）
+ * @param str 需要转义的字符串
+ * @returns 转义后的安全字符串
+ */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * 查找例句中目标单词及其所有变形（规则+不规则）的字符索引
+ * @param targetWord 目标单词（原形）
+ * @param sentence 包含目标单词的例句
+ * @param irregularForms 不规则变形数组（如 ["went", "gone"] 对应 "go"）
+ * @returns 所有匹配字符的索引数组（从0开始，按出现顺序排列）
+ */
+export function findWordIndices(
+  targetWord: string,
+  sentence: string,
+  irregularForms: string[] = []
+): number[] {
+  // 1. 定义英语中常见的规则变形后缀（覆盖大多数规则变化）
+  const regularSuffixes = [
+    '', // 原形（必须包含）
+    's', // 第三人称单数（如 runs, eats）
+    'es', // 特殊第三人称单数（如 watches, passes）
+    'ed', // 过去式/过去分词（如 walked, played）
+    'ing', // 现在分词（如 running, eating）
+    'en', // 过去分词（如 spoken, written）
+    'er', // 比较级（如 faster, bigger）
+    'est', // 最高级（如 fastest, biggest）
+    'd', // 去e加d（如 loved, moved）
+    't', // 不规则过去式（如 spent, felt, kept）
+    'ied', // 以y结尾变ied（如 studied, tried）
+    'ies', // 以y结尾变ies（如 flies, cries）
+    'ing', // 重读闭音节双写尾字母加ing（如 sitting, running）
+    'ed', // 重读闭音节双写尾字母加ed（如 stopped, dropped）
+  ];
+
+  // 2. 处理目标单词的规则变形（生成所有可能的规则形式）
+  const escapedTarget = escapeRegExp(targetWord);
+  const regularForms = regularSuffixes.map(
+    (suffix) => `${escapedTarget}${suffix}`
+  );
+
+  // 3. 合并规则变形和不规则变形（去重处理）
+  const allForms = [...new Set([...regularForms, ...irregularForms])];
+
+  // 4. 构建正则表达式（匹配完整单词，忽略大小写，全局匹配）
+  // \b 确保匹配完整单词（避免匹配单词片段，如 "appoint" 不匹配 "appointment"）
+  const pattern = `\\b(?:${allForms.map(escapeRegExp).join('|')})\\b`;
+  const regex = new RegExp(pattern, 'gi');
+
+  // 5. 查找所有匹配项并收集索引
+  const indices: number[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(sentence)) !== null) {
+    const startIndex = match.index;
+    const matchLength = match[0].length;
+    const endIndex = startIndex + matchLength - 1;
+
+    // 收集当前匹配项的所有字符索引（从start到end，包含两端）
+    for (let i = startIndex; i <= endIndex; i++) {
+      indices.push(i);
+    }
+
+    // 处理零宽匹配的极端情况（避免无限循环）
+    if (matchLength === 0) {
+      regex.lastIndex++;
+    }
+  }
+
+  return indices;
 }

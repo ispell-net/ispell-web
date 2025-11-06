@@ -1,22 +1,24 @@
 /*
  * @Date: 2025-10-30 10:25:00
- * @LastEditTime: 2025-11-04 20:16:37
- * @Description: 学习计划列表组件
- * 功能：展示用户已添加的学习计划，支持激活、调整、重置、取消学习等操作
+ * @LastEditTime: 2025-11-06 21:48:53
+ * @Description: 学习计划列表组件 (已优化空状态)
  */
 
 import React, { RefObject } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl'; // 1. 恢复真实的 import
+import { useTranslations } from 'next-intl';
 import {
   MoreHorizontal,
   RotateCcw,
   Trash2,
   ListTree,
   SlidersHorizontal,
+  ArchiveX,
 } from 'lucide-react';
 import type { Book, LearningPlan, PlanDetails } from '@/types/book.types';
-import PlanSetupView from './PlanSetupView'; // 1. 恢复真实的 import
+import PlanSetupView from './PlanSetupView';
+// [!! 1. 新增导入 !!] 导入 Next.js Image 组件
+import Image from 'next/image';
 
 interface LearningViewProps {
   learningList: LearningPlan[];
@@ -34,6 +36,7 @@ interface LearningViewProps {
   setPreviewBook: (book: Book | null) => void;
   handleUpdatePlan: (planId: number, book: Book, plan: PlanDetails) => void;
   handleViewPlanWords?: (planId: number, bookName: string) => void;
+  handleViewMistakes?: (planId: number, bookName: string) => void;
 }
 
 const LearningView: React.FC<LearningViewProps> = ({
@@ -52,8 +55,9 @@ const LearningView: React.FC<LearningViewProps> = ({
   setPreviewBook,
   handleUpdatePlan,
   handleViewPlanWords,
+  handleViewMistakes,
 }) => {
-  const t = useTranslations('BookSelection'); // 1. 恢复真实的 hook
+  const t = useTranslations('BookSelection');
 
   return (
     <motion.div
@@ -86,27 +90,42 @@ const LearningView: React.FC<LearningViewProps> = ({
                       : 'border-gray-200 dark:border-gray-700'
                   } bg-white dark:bg-gray-800`}
                 >
-                  {/* --- 3. 修改为带文字的 "芯片" 按钮 --- */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // 阻止触发卡片点击
-                      handleViewPlanWords?.(planId, book.name);
-                    }}
-                    className="absolute top-3 right-3 flex items-center space-x-1.5 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    aria-label={t('LearningView.buttons.viewPlanWords')}
-                  >
-                    <ListTree className="w-4 h-4" />
-                    <span>{t('LearningView.buttons.viewPlanWords')}</span>
-                  </button>
-                  {/* --- 修改结束 --- */}
+                  {/* --- 按钮组 --- */}
+                  <div className="absolute top-3 right-3 flex space-x-2">
+                    {/* 按钮 1: 查看方案 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewPlanWords?.(planId, book.name);
+                      }}
+                      className="flex items-center space-x-1.5 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      aria-label={t('LearningView.buttons.viewPlanWords')}
+                    >
+                      <ListTree className="w-4 h-4" />
+                      <span>{t('LearningView.buttons.viewPlanWords')}</span>
+                    </button>
+
+                    {/* 按钮 2: 错题集 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewMistakes?.(planId, book.name);
+                      }}
+                      className="flex items-center space-x-1.5 rounded-full bg-red-100 dark:bg-red-900/50 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/80 transition-colors"
+                      aria-label={t('LearningView.buttons.viewMistakes')}
+                    >
+                      <ArchiveX className="w-4 h-4" />
+                      <span>{t('LearningView.buttons.viewMistakes')}</span>
+                    </button>
+                  </div>
 
                   {isActuallyCurrent && (
                     <div className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
                       {t('LearningView.currentActive')}
                     </div>
                   )}
-                  {/* 标题（为按钮腾出空间） */}
-                  <h5 className="font-semibold text-gray-900 dark:text-white pr-24">
+                  {/* 标题 (为按钮腾出空间) */}
+                  <h5 className="font-semibold text-gray-900 dark:text-white pr-40">
                     {book.name}
                   </h5>
                   <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
@@ -128,9 +147,8 @@ const LearningView: React.FC<LearningViewProps> = ({
                     </span>
                   </div>
 
-                  {/* --- 按钮布局 (已移除 "查看单词列表" 按钮) --- */}
+                  {/* --- 按钮布局 (保持不变) --- */}
                   <div className="mt-4 flex space-x-3">
-                    {/* 按钮 1: 激活 (始终可见) */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -144,7 +162,6 @@ const LearningView: React.FC<LearningViewProps> = ({
                         : t('LearningView.buttons.setAsCurrent')}{' '}
                     </button>
 
-                    {/* 按钮 2: 调整计划 (中屏 md: 及以上可见) - 恢复灰色 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -155,7 +172,6 @@ const LearningView: React.FC<LearningViewProps> = ({
                       {t('LearningView.buttons.adjustPlan')}{' '}
                     </button>
 
-                    {/* 按钮 3: 更多 (始终可见) */}
                     <div className="relative shrink-0" ref={menuRef}>
                       <button
                         onClick={(e) => {
@@ -177,7 +193,6 @@ const LearningView: React.FC<LearningViewProps> = ({
                             className="absolute right-0 top-full mt-2 w-48 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700"
                           >
                             <ul className="p-1">
-                              {/* 调整计划 (仅在 中屏 md: 以下在菜单中显示) */}
                               <li className="md:hidden">
                                 <button
                                   onClick={(e) => {
@@ -193,7 +208,6 @@ const LearningView: React.FC<LearningViewProps> = ({
                                 </button>
                               </li>
 
-                              {/* 重置进度 (始终在菜单中) */}
                               <li>
                                 <button
                                   onClick={(e) => {
@@ -209,7 +223,6 @@ const LearningView: React.FC<LearningViewProps> = ({
                                 </button>
                               </li>
 
-                              {/* 取消学习 (始终在菜单中) */}
                               <li>
                                 <button
                                   onClick={(e) => {
@@ -245,14 +258,16 @@ const LearningView: React.FC<LearningViewProps> = ({
                       }}
                       className="overflow-hidden"
                     >
-                      <PlanSetupView // 1. 恢复真实的 import
-                        book={previewBook}
-                        initialPlan={plan}
-                        onStart={(updatedPlan) =>
-                          handleUpdatePlan(planId, book, updatedPlan)
-                        }
-                        onCancel={() => setPreviewBook(null)}
-                      />
+                      <div className="pt-3">
+                        <PlanSetupView
+                          book={previewBook}
+                          initialPlan={plan}
+                          onStart={(updatedPlan) =>
+                            handleUpdatePlan(planId, book, updatedPlan)
+                          }
+                          onCancel={() => setPreviewBook(null)}
+                        />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -260,9 +275,43 @@ const LearningView: React.FC<LearningViewProps> = ({
             );
           })
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-10">
-            {t('LearningView.noLearningBooks')}{' '}
-          </p>
+          // [!! 2. 已修改的空状态 !!]
+          <div className="flex flex-col items-center justify-center text-center py-10 px-4">
+            {/* 插图容器 */}
+            <div
+              className="w-40 h-40 sm:w-48 sm:h-48 mb-6 relative"
+              aria-hidden="true"
+            >
+              {/* 亮色模式插图 */}
+              <Image
+                src="/images/illustrations/power.svg"
+                alt={t('LearningView.empty.alt')}
+                width={192} // 192px = 12rem = w-48
+                height={192} // 192px = 12rem = h-48
+                className="block dark:hidden w-full h-full object-contain"
+                priority={false} // 非首屏，无需优先加载
+              />
+              {/* 暗色模式插图 */}
+              <Image
+                src="/images/illustrations/power-dark.svg"
+                alt={t('LearningView.empty.alt')}
+                width={192}
+                height={192}
+                className="hidden dark:block w-full h-full object-contain"
+                priority={false}
+              />
+            </div>
+
+            {/* 优化后的文案 (标题) */}
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+              {t('LearningView.empty.title')}
+            </h3>
+
+            {/* 优化后的文案 (描述) */}
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+              {t('LearningView.noLearningBooks')}
+            </p>
+          </div>
         )}
       </div>
     </motion.div>

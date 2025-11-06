@@ -1,19 +1,19 @@
 'use client';
 /*
  * @Date: 2025-10-27 02:37:15
- * @LastEditTime: 2025-11-04 20:24:47
- * @Description: 单词拼写功能的设置面板组件 (已优化移动端兼容性)
+ * @LastEditTime: 2025-11-05 17:48:15
+ * @Description: 单词拼写功能的设置面板组件 (已添加“隐藏例句单词”开关)
  */
 
-import React, { ChangeEvent, Dispatch, SetStateAction } from 'react';
-import * as Popover from '@radix-ui/react-popover';
+import React, { ChangeEvent, Dispatch, SetStateAction, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion'; // [!!] 导入
 import { useTranslations } from 'next-intl';
 import { useSpelling } from '@/contexts/spelling.context';
 import { AccentType, DisplayMode, GenderType } from '@/types/word.types';
 import { Settings as SettingsIcon, X } from 'lucide-react';
 
 /**
- * 选项配置 (无变化)
+ * 选项配置 (不变)
  */
 const SPEECH_SOURCE_OPTIONS = [
   { value: 'false' as const }, // 默认发音 (API)
@@ -37,12 +37,11 @@ const DISPLAY_MODE_OPTIONS = [
 ];
 
 /**
- * 设置表单 (无变化)
+ * 设置表单
  */
 const SettingsForm = () => {
   const t = useTranslations('Settings');
 
-  // 从Hook获取状态 (无变化)
   const {
     speechConfig,
     setSpeechConfig,
@@ -52,9 +51,12 @@ const SettingsForm = () => {
     setIsCustomSpeech,
     showSentences,
     setShowSentences,
+    showSentenceTranslation,
+    setShowSentenceTranslation,
+    hideWordInSentence,
+    setHideWordInSentence,
   } = useSpelling();
 
-  // 事件处理函数 (无变化)
   const handleSpeechSourceChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setIsCustomSpeech(e.target.value === 'true');
   };
@@ -78,13 +80,18 @@ const SettingsForm = () => {
       gender: e.target.value as GenderType,
     }));
   };
+
   const handleDisplayModeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setDisplayMode(e.target.value as DisplayMode);
+    const newMode = e.target.value as DisplayMode;
+    setDisplayMode(newMode);
+
+    if (newMode !== 'full') {
+      setHideWordInSentence(true);
+    }
   };
 
-  // 布局 (无变化)
   return (
-    <div className="flex flex-col space-y-5 max-h-[60vh] overflow-y-auto p-1 pr-3">
+    <div className="flex flex-col space-y-5">
       {/* 语音设置 */}
       <section>
         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
@@ -150,33 +157,47 @@ const SettingsForm = () => {
         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
           {t('sectionTitles.displaySettings')}
         </h3>
-        <SelectItem
-          label={t('labels.displayMode')}
-          options={DISPLAY_MODE_OPTIONS.map((option) => ({
-            value: option.value,
-            label: t(`options.displayMode.${option.value}`),
-          }))}
-          selectedValue={displayMode}
-          onChange={handleDisplayModeChange}
-        />
+        <div className="space-y-4">
+          <SelectItem
+            label={t('labels.displayMode')}
+            options={DISPLAY_MODE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: t(`options.displayMode.${option.value}`),
+            }))}
+            selectedValue={displayMode}
+            onChange={handleDisplayModeChange}
+          />
+          <ToggleItem
+            label={t('labels.hideWordInSentence')}
+            checked={hideWordInSentence}
+            onChange={setHideWordInSentence}
+          />
+        </div>
       </section>
 
-      {/* 内容显示设置 (您注释掉的，我保持注释) */}
-      {/* <section>
+      {/* 内容设置 */}
+      <section>
         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-          {t('sectionTitles.contentSettings')}
+          {t('sectionTitles.sentenceSettings')}
         </h3>
-        <ToggleItem
-          label={t('labels.showSentences')}
-          checked={showSentences}
-          onChange={setShowSentences}
-        />
-      </section> */}
+        <div className="space-y-4">
+          <ToggleItem
+            label={t('labels.showSentences')}
+            checked={showSentences}
+            onChange={setShowSentences}
+          />
+          <ToggleItem
+            label={t('labels.showSentenceTranslation')}
+            checked={showSentenceTranslation}
+            onChange={setShowSentenceTranslation}
+          />
+        </div>
+      </section>
     </div>
   );
 };
 
-// 滑块组件 (无变化)
+// (SliderItem, SelectItem, ToggleItem ... 辅助组件保持不变)
 interface SliderItemProps {
   label: string;
   value: number;
@@ -218,7 +239,6 @@ function SliderItem({
   );
 }
 
-// 下拉选择组件 (无变化)
 interface SelectItemProps<T extends string> {
   label: string;
   options: { label: string; value: T }[];
@@ -275,7 +295,6 @@ function SelectItem<T extends string>({
   );
 }
 
-// 开关组件 (无变化)
 interface ToggleItemProps {
   label: string;
   checked: boolean;
@@ -314,52 +333,75 @@ function ToggleItem({ label, checked, onChange }: ToggleItemProps) {
 }
 
 /**
- * 设置面板主组件
+ * 设置面板主组件 (抽屉)
  */
 const Settings = () => {
   const t = useTranslations('Settings');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
-    <Popover.Root>
-      {/* 触发器 (无变化) */}
-      <Popover.Trigger asChild>
-        <button
-          aria-label={t('aria.openSettings')}
-          className="fixed bottom-6 right-4 sm:right-6 p-3 bg-gray-900 dark:bg-gray-700 text-white rounded-full shadow-lg group transition-all duration-300  hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-600 focus:ring-offset-2 z-30"
-        >
-          <SettingsIcon className="transition-transform duration-300 group-hover:rotate-90" />
-        </button>
-      </Popover.Trigger>
+    <>
+      {/* 触发器 */}
+      <button
+        onClick={() => setIsSettingsOpen(true)}
+        aria-label={t('aria.openSettings')}
+        className="fixed bottom-6 right-4 sm:right-6 p-3 bg-gray-900 dark:bg-gray-700 text-white rounded-full shadow-lg group transition-all duration-300  hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-600 focus:ring-offset-2 z-30"
+      >
+        <SettingsIcon className="transition-transform duration-300 group-hover:rotate-90" />
+      </button>
 
-      {/* 弹窗内容 */}
-      <Popover.Portal>
-        <Popover.Content
-          sideOffset={10}
-          align="end"
-          // [!! 关键修改 !!]
-          // 1. 移除了 w-100 (无效类)
-          // 2. w-[calc(100vw-2rem)]: 移动端宽度 (全宽-边距)
-          // 3. sm:w-80: 桌面端宽度 (320px)
-          className="z-50 w-[calc(100vw-2rem)] sm:w-80 rounded-lg border border-gray-200 bg-white p-5 shadow-xl outline-none dark:bg-gray-900 dark:border-gray-700 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-[side=right]:slide-in-from-left-2 data-[side=left]:slide-in-from-right-2"
-        >
-          {/* 标题 (无变化) */}
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t('aria.openSettings')}
-          </h2>
+      {/* 抽屉 */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <>
+            {/* 背景遮罩 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsSettingsOpen(false)}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+              aria-hidden="true"
+            />
 
-          <SettingsForm />
+            {/* 抽屉面板 (从右侧滑入) */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="settings-drawer-title"
+            >
+              {/* 抽屉标题栏 */}
+              <div className="flex items-center justify-between p-4 shrink-0">
+                <h2
+                  id="settings-drawer-title"
+                  className="text-xl font-semibold text-gray-900 dark:text-white"
+                >
+                  {t('aria.openSettings')}
+                </h2>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label={t('aria.closeSettings')}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-          {/* 关闭按钮 (无变化) */}
-          <Popover.Close
-            className="absolute right-3 top-3 p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
-            aria-label={t('aria.closeSettings')}
-          >
-            <X className="h-4 w-4" />
-          </Popover.Close>
-          <Popover.Arrow className="fill-white dark:fill-gray-900" />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+              {/* 抽屉内容区 (滚动) */}
+              <div className="flex-1 p-4 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
+                <SettingsForm />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
