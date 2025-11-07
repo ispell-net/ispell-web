@@ -1,16 +1,22 @@
 'use client';
 /*
  * @Date: 2025-10-27 02:37:15
- * @LastEditTime: 2025-11-05 17:48:15
- * @Description: 单词拼写功能的设置面板组件 (已添加“隐藏例句单词”开关)
+ * @LastEditTime: 2025-11-07 19:59:23
+ * @Description: 单词拼写功能的设置表单 (已重构为纯组件)
+ *
+ * [!! 重构 !!]
+ * 1. 移除了 'SettingsModal' 及其所有 Modal 逻辑 (AnimatePresence, motion.div)
+ * 2. 移除了 'FeedbackModal' 及其 'useState' (已移至 settings/page.tsx)
+ * 3. 文件现在默认导出 'SettingsForm' 组件
  */
 
-import React, { ChangeEvent, Dispatch, SetStateAction, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion'; // [!!] 导入
+import React, { ChangeEvent, Dispatch, SetStateAction } from 'react';
+// [!! 移除 !!] 移除了 motion, AnimatePresence
 import { useTranslations } from 'next-intl';
 import { useSpelling } from '@/contexts/spelling.context';
 import { AccentType, DisplayMode, GenderType } from '@/types/word.types';
-import { Settings as SettingsIcon, X } from 'lucide-react';
+// [!! 移除 !!] 移除了 X, MessageSquareWarning, SettingsIcon
+// [!! 移除 !!] 移除了 FeedbackModal
 
 /**
  * 选项配置 (不变)
@@ -37,7 +43,7 @@ const DISPLAY_MODE_OPTIONS = [
 ];
 
 /**
- * 设置表单
+ * 设置表单 (不变)
  */
 const SettingsForm = () => {
   const t = useTranslations('Settings');
@@ -91,12 +97,12 @@ const SettingsForm = () => {
   };
 
   return (
+    // [!! 修改 !!] 移除了 'p-4' (现在由 SectionCard 控制 padding)
     <div className="flex flex-col space-y-5">
       {/* 语音设置 */}
       <section>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-          {t('sectionTitles.speechSettings')}
-        </h3>
+        {/* [!! 修改 !!] 移除了 h3 标题 (现在由 SectionCard 控制标题) */}
+        {/* <h3 ...> </h3> */}
         <div className="space-y-4">
           <SelectItem
             label={t('labels.speechSource')}
@@ -154,9 +160,8 @@ const SettingsForm = () => {
 
       {/* 单词显示设置 */}
       <section>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-          {t('sectionTitles.displaySettings')}
-        </h3>
+        {/* [!! 修改 !!] 移除了 h3 标题 */}
+        {/* <h3 ...> </h3> */}
         <div className="space-y-4">
           <SelectItem
             label={t('labels.displayMode')}
@@ -177,9 +182,8 @@ const SettingsForm = () => {
 
       {/* 内容设置 */}
       <section>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-          {t('sectionTitles.sentenceSettings')}
-        </h3>
+        {/* [!! 修改 !!] 移除了 h3 标题 */}
+        {/* <h3 ...> </h3> */}
         <div className="space-y-4">
           <ToggleItem
             label={t('labels.showSentences')}
@@ -198,6 +202,7 @@ const SettingsForm = () => {
 };
 
 // (SliderItem, SelectItem, ToggleItem ... 辅助组件保持不变)
+// ... (SliderItem, SelectItem, ToggleItem 代码) ...
 interface SliderItemProps {
   label: string;
   value: number;
@@ -332,77 +337,6 @@ function ToggleItem({ label, checked, onChange }: ToggleItemProps) {
   );
 }
 
-/**
- * 设置面板主组件 (抽屉)
- */
-const Settings = () => {
-  const t = useTranslations('Settings');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  return (
-    <>
-      {/* 触发器 */}
-      <button
-        onClick={() => setIsSettingsOpen(true)}
-        aria-label={t('aria.openSettings')}
-        className="fixed bottom-6 right-4 sm:right-6 p-3 bg-gray-900 dark:bg-gray-700 text-white rounded-full shadow-lg group transition-all duration-300  hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-600 focus:ring-offset-2 z-30"
-      >
-        <SettingsIcon className="transition-transform duration-300 group-hover:rotate-90" />
-      </button>
-
-      {/* 抽屉 */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <>
-            {/* 背景遮罩 */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setIsSettingsOpen(false)}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-              aria-hidden="true"
-            />
-
-            {/* 抽屉面板 (从右侧滑入) */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="settings-drawer-title"
-            >
-              {/* 抽屉标题栏 */}
-              <div className="flex items-center justify-between p-4 shrink-0">
-                <h2
-                  id="settings-drawer-title"
-                  className="text-xl font-semibold text-gray-900 dark:text-white"
-                >
-                  {t('aria.openSettings')}
-                </h2>
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  aria-label={t('aria.closeSettings')}
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* 抽屉内容区 (滚动) */}
-              <div className="flex-1 p-4 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
-                <SettingsForm />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
-export default Settings;
+// [!! 修改 !!] 默认导出 SettingsForm
+export default SettingsForm;

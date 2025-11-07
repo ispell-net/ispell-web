@@ -210,10 +210,10 @@
     }
   },
   "Settings": {
+    "pageTitle": "系统设置",
+    "pageDescription": "管理您的应用偏好设置",
     "sectionTitles": {
-      "speechSettings": "语音设置",
-      "displaySettings": "显示设置",
-      "sentenceSettings": "例句设置"
+      "appSettings": "应用设置"
     },
     "labels": {
       "speechSource": "发音源",
@@ -248,9 +248,11 @@
       }
     },
     "aria": {
-      "openSettings": "设置",
-      "closeSettings": "关闭设置"
-    }
+      "openSettings": "设置"
+    },
+    "feedbackBtn": "问题反馈",
+    "feedbackCardTitle": "问题反馈",
+    "feedbackCardDescription": "遇到问题或有新建议？我们随时倾听。"
   },
   "Words": {
     "DefinitionDisplay": {
@@ -356,7 +358,8 @@
     "profileSettings": "个性设置",
     "systemSettings": "系统设置",
     "logout": "退出登录",
-    "changelog": "更新日志"
+    "changelog": "更新日志",
+    "donate": "爱心捐赠"
   },
   "Profile": {
     "pageTitle": "个性设置",
@@ -436,7 +439,8 @@
       "publicWelfareExpense": "公益支出",
       "certificateLabel": "捐款公示证书：",
       "viewFullCert": "点击查看完整证书",
-      "updateHint": "公示数据每月更新，确保每一笔捐赠都公开透明，欢迎监督"
+      "updateHint": "公示数据每月更新，确保每一笔捐赠都公开透明，欢迎监督",
+      "empty": "暂无公示数据，首月数据将在下月初更新。"
     },
     "main": {
       "title": "助力偏远地区学子",
@@ -461,6 +465,40 @@
       "closePublicity": "关闭公示",
       "viewPublicity": "查看捐款公示"
     }
+  },
+  "FeedbackModal": {
+    "title": "问题反馈",
+    "close": "关闭",
+    "typeLabel": "反馈类型",
+    "contentLabel": "详细内容",
+    "contentPlaceholder": "请详细描述您遇到的问题或建议 (2000字以内)",
+    "submitBtn": "提交",
+    "cancelBtn": "取消",
+    "submitting": "提交中...",
+    "submitSuccess": "感谢您的反馈！",
+    "submitError": "提交失败，请稍后重试。",
+    "types": {
+      "WORD": "词汇问题",
+      "FUNCTION": "网站功能",
+      "BUG": "缺陷漏洞",
+      "SUGGESTION": "功能建议"
+    },
+    "contactLabel": "您的邮箱 (可选)",
+    "contactPlaceholder": "如果您希望我们回复您...",
+    "contactHint": "未登录用户可填写邮箱，以便我们与您联系。"
+  },
+  "DonateBanner": {
+    "text": "致力于每个乡村孩子的健康成长，让孩子的未来发光发亮。",
+    "link": "了解更多",
+    "closeAriaLabel": "关闭捐赠横幅"
+  },
+  "Footer": {
+    "copyright": "iSpell. 版权所有。",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "donate": "爱心捐赠",
+    "changelogLink": "更新日志",
+    "feedbackLink": "问题反馈"
   },
   "Changelog": {
     "title": "更新日志",

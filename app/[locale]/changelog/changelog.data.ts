@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-11-06 21:11:15
- * @LastEditTime: 2025-11-06 21:36:06
+ * @LastEditTime: 2025-11-07 20:43:17
  * @Description:
  */
 /** 变更类型：新增, 修复, 重构, 性能, 文档 */
@@ -28,7 +28,7 @@ export interface ChangelogEntry {
 export const changelogData: ChangelogEntry[] = [
   {
     version: 'v1.0.0',
-    date: '2025-11-06',
+    date: '2025-11-01',
     changes: [
       {
         type: 'new',

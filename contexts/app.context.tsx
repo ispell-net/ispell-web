@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-28 22:05:53
- * @LastEditTime: 2025-11-04 22:40:59
- * @Description: AppContext (已添加错题集复习功能)
+ * @LastEditTime: 2025-11-07 20:36:09
+ * @Description: 
  */
 'use client';
 
@@ -18,7 +18,7 @@ import type { PlanDetails, Language, LearningPlan } from '@/types/book.types';
 import { fetchBookHierarchy } from '@/services/bookService';
 import { fetchLearningList } from '@/services/planService';
 import { Tokens, User } from '@/types/auth.types';
-import { Word } from '@/types/word.types'; // [!! 新增 !!] 导入 Word 类型
+import { Word } from '@/types/word.types';
 import { apiFetchProfile, EXPECTED_OAUTH_ORIGIN } from '@/services/authService';
 import toast from 'react-hot-toast';
 
@@ -56,6 +56,10 @@ interface IAppContext {
   closeRegisterModal: () => void;
   isBookDrawerOpen: boolean;
   setIsBookDrawerOpen: (isOpen: boolean) => void;
+  // [!! 新增 !!]
+  isFeedbackModalOpen: boolean;
+  openFeedbackModal: () => void;
+  closeFeedbackModal: () => void;
   // 主题
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -114,6 +118,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
+  // [!! 新增 !!] 反馈模态框状态
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const openFeedbackModal = () => setIsFeedbackModalOpen(true);
+  const closeFeedbackModal = () => setIsFeedbackModalOpen(false);
 
   // --- 主题状态管理 ---
   const [theme, setTheme] = useState<Theme>('system');
@@ -291,6 +300,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setDataError(null);
     closeLoginModal();
     closeRegisterModal();
+    closeFeedbackModal(); // [!! 新增 !!] 登出时关闭
   }, []);
 
   // --- [新] OAuth 绑定/登录 回调监听器 ---
@@ -464,6 +474,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       closeRegisterModal,
       isBookDrawerOpen,
       setIsBookDrawerOpen,
+      // [!! 新增 !!]
+      isFeedbackModalOpen,
+      openFeedbackModal,
+      closeFeedbackModal,
+      //
       currentBookId,
       setCurrentBookId,
       learningTrigger,
@@ -495,6 +510,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isLoginModalOpen,
       isRegisterModalOpen,
       isBookDrawerOpen,
+      // [!! 新增 !!]
+      isFeedbackModalOpen,
+      //
       currentBookId,
       learningTrigger,
       loadBook,

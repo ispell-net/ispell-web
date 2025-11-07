@@ -41,7 +41,7 @@ export interface Language {
   name: string; // 语言全称（如"英语"、"日语"）
   shortName: string; // 语言简称（如"英"、"日"，用于UI紧凑展示）
   categories: Category[]; // 该语言下的所有分类（L2层级集合）
-  order: number;
+  
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-28 21:48:48
- * @LastEditTime: 2025-11-06 21:40:14
+ * @LastEditTime: 2025-11-07 20:21:10
  * @Description: 顶部导航栏用户头像组件 (已修正拼写错误)
  */
 'use client';
@@ -113,19 +113,6 @@ const UserAvatar: React.FC = () => {
               </Link>
             </li>
 
-            {/* 更新日志入口 */}
-            <li>
-              <Link
-                href="/changelog"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <LayoutList className="w-5 h-5 mr-3" />
-                {t('changelog')}
-              </Link>
-            </li>
-
-            {/* 被注释掉的系统设置
             <li>
               <Link
                 href="/settings"
@@ -136,7 +123,6 @@ const UserAvatar: React.FC = () => {
                 {t('systemSettings')}
               </Link>
             </li>
-            */}
 
             {/* 退出登录 */}
             <li className="mt-1 border-t border-gray-200 dark:border-gray-700">

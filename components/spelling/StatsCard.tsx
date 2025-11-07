@@ -1,7 +1,7 @@
 /*
  * @Date: 2025-10-26 10:03:34
- * @LastEditTime: 2025-11-05 08:45:09
- * @Description: 单词学习统计卡片组件（支持国际化，已替换为剩余单词数）
+ * @LastEditTime: 2025-11-07 17:23:01
+ * @Description: 单词学习统计卡片 (已按要求调整移动端显示项)
  */
 import { useTranslations } from 'next-intl';
 import { useSpelling } from '@/contexts/spelling.context';
@@ -16,9 +16,13 @@ export default function StatsCard() {
   const remainingWords = Math.max(0, words.length - correctCount);
 
   return (
-    <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-6 transform transition-all duration-300 hover:shadow-xl mb-6">
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
-        {/* 1. 计时 */}
+    // (外部容器样式保持不变)
+    <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-2 sm:p-6 transform transition-all duration-300 hover:shadow-xl mb-4 sm:mb-6">
+      {/* (grid-cols-3 sm:grid-cols-5 保持不变) */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 sm:gap-4">
+        
+        {/* 1. 计时 (始终显示) */}
+        {/* [!! 修改 !!] 移除了 'hidden sm:block' */}
         <div className="text-center p-1 sm:p-2">
           <p className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1">
             {time}
@@ -27,8 +31,10 @@ export default function StatsCard() {
             {t('statsCard.timing')}
           </p>
         </div>
-        {/* 2. 尝试次数 */}
-        <div className="text-center p-1 sm:p-2">
+        
+        {/* 2. 尝试次数 (在移动端隐藏) */}
+        {/* [!!] (保持 'hidden sm:block') */}
+        <div className="hidden sm:block text-center p-1 sm:p-2">
           <p className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1">
             {inputCount}
           </p>
@@ -36,8 +42,10 @@ export default function StatsCard() {
             {t('statsCard.attempts')}
           </p>
         </div>
-        {/* 3. 正确拼写 */}
-        <div className="text-center p-1 sm:p-2">
+
+        {/* 3. 正确拼写 (在移动端隐藏) */}
+        {/* [!! 修改 !!] 添加了 'hidden sm:block' */}
+        <div className="hidden sm:block text-center p-1 sm:p-2">
           <p className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1">
             {correctCount}
           </p>
@@ -45,16 +53,20 @@ export default function StatsCard() {
             {t('statsCard.correctSpelling')}
           </p>
         </div>
-        {/* 4. 剩余单词（替换原“已掌握”） */}
+
+        {/* 4. 剩余单词 (始终显示) */}
+        {/* [!!] (保持始终显示) */}
         <div className="text-center p-1 sm:p-2">
           <p className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1">
             {remainingWords}
           </p>
           <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400">
-            {t('statsCard.remainingWords')} {/* 新增国际化key */}
+            {t('statsCard.remainingWords')}
           </p>
         </div>
-        {/* 5. 正确率 */}
+
+        {/* 5. 正确率 (始终显示) */}
+        {/* [!!] (保持始终显示) */}
         <div className="text-center p-1 sm:p-2">
           <p className="text-lg sm:text-2xl font-semibold text-green-500 dark:text-green-400 mb-0.5 sm:mb-1">
             {accuracy}%

@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-23 09:38:39
- * @LastEditTime: 2025-11-04 19:16:42
+ * @LastEditTime: 2025-11-07 20:05:19
  * @Description: 拼写学习主页面组件 (已移除顶部边距)
  */
 'use client';
@@ -19,7 +19,6 @@ import WordDisplay from '@/components/spelling/WordDisplay'; // 单词展示组�
 import WordList from '@/components/word-list'; // 单词列表组件（当前学习会话的单词清单）
 import LearningStart from '@/components/learning-start'; // 学习开始组件（未激活会话时显示，用于启动学习）
 
-import Settings from '@/components/settings'; // 设置面板组件（控制学习参数、显示模式等）
 import BookSelectionDrawer from '@/components/book-selection/BookSelectionDrawer'; // 书籍选择抽屉（选择要学习的单词书）
 
 /**
@@ -66,8 +65,6 @@ function Content() {
         )}
       </div>
 
-      {/* 全局浮动组件：设置面板、书籍选择抽屉 */}
-      <Settings />
       <BookSelectionDrawer />
 
       {/* 学习会话激活且未完成时：显示单词列表 */}

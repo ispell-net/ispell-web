@@ -1,12 +1,20 @@
 'use client';
 /*
  * @Date: 2025-10-26 10:02:44
- * @LastEditTime: 2025-11-06 19:52:47
- * @Description: 单词拼写显示区域 (监听全局 setting)
- * [!! 已更新 !!]
- * 1. 允许用户手动输入撇号 (') 并进行校验。
- * 2. 自动跳过空格 ( )。
- * 3. 校验逻辑现在严格区分大小写。
+ * @LastEditTime: 2025-11-07 18:00:21
+ * @Description: 单词拼写显示区域 (已修复长单词溢出换行问题)
+ *
+ * [!! 关键修复 !!]
+ * 1. (第 262 行) <div className="mb-6...">:
+ * - 移除了 'h-20' (固定高度)
+ * - 添加了 'min-h-[80px]' (允许容器根据内容变高)
+ * - 添加了 'w-full px-4' (为换行提供宽度边界和内边距)
+ * 2. (第 225 行) wordContainerRef:
+ * - 将 'gap-2' 改为 'gap-x-2' (只控制水平间距)
+ * - 添加了 'gap-y-4' (为换行后的行添加垂直间距)
+ * - 添加了 'flex-wrap' (核心修复：允许字母换行)
+ * 3. (第 237 行) 空格 <span>:
+ * - 添加了 'w-4 sm:w-6' (给空格一个明确的宽度，确保换行表现一致)
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -291,7 +299,11 @@ export default function WordDisplay() {
     return (
       <div
         ref={wordContainerRef}
-        className="flex items-center justify-center gap-2 transition-all duration-300 cursor-default"
+        // [!! 2. 关键修复 !!]
+        // - 添加 flex-wrap (允许换行)
+        // - 将 gap-2 改为 gap-x-2 (水平间距)
+        // - 添加 gap-y-4 (垂直换行间距)
+        className="flex items-center justify-center gap-x-2 gap-y-4 flex-wrap transition-all duration-300 cursor-default"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -309,7 +321,9 @@ export default function WordDisplay() {
             return (
               <span
                 key={index}
-                className={`text-5xl sm:text-7xl ${colorClass}`}
+                // [!! 3. 关键修复 !!]
+                // - 添加 w-4 sm:w-6 (给空格一个固定宽度，帮助换行)
+                className={`text-5xl sm:text-7xl ${colorClass} w-4 sm:w-6`}
                 dangerouslySetInnerHTML={{ __html: displayChar }}
               />
             );
@@ -319,8 +333,7 @@ export default function WordDisplay() {
           const isCurrent = index === currentPosition;
           const hasError = isError && isCurrent;
 
-          // [!! 关键修改 !!]
-          // 移除 .toLowerCase()，进行严格的大小写匹配
+          // ... (内部逻辑不变) ...
           let isCorrect = false;
           if (isEntered) {
             isCorrect = userInput[index] === char;
@@ -408,13 +421,18 @@ export default function WordDisplay() {
     playWordPronunciation(type);
   };
 
-  // --- JSX 返回 (不变) ---
+  // --- JSX 返回 (修改) ---
   return (
     <div
       className="w-full flex flex-col items-center justify-center relative"
       style={{ minHeight: '300px' }}
     >
-      <div className="mb-6 h-20 flex items-center">
+      {/* [!! 1. 关键修复 !!]
+        - 移除 h-20 (固定高度)
+        - 添加 min-h-[80px] (允许容器增长)
+        - 添加 w-full px-4 (提供换行边界)
+      */}
+      <div className="mb-6 min-h-[80px] w-full px-4 flex items-center justify-center">
         {renderWord(currentWord?.text || '')}
       </div>
 
@@ -443,7 +461,7 @@ export default function WordDisplay() {
             >
               <div className="mt-4">
                 <SentenceDisplay
-                  sentences={currentWord?.examples.general}
+                  sentences={currentWord.examples.general}
                   showTranslation={showSentenceTranslation}
                 />
               </div>
