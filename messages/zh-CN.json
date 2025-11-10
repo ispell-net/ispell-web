@@ -259,15 +259,19 @@
     "pageTitle": "系统设置",
     "pageDescription": "管理您的应用偏好设置",
     "sectionTitles": {
-      "appSettings": "应用设置"
+      "appSettings": "应用设置",
+      "speech": "朗读设置",
+      "display": "拼写设置",
+      "content": "例句设置"
     },
     "labels": {
       "speechSource": "发音源",
       "accent": "口音",
       "speechRate": "语速",
       "voiceGender": "声音",
-      "displayMode": "背诵模式",
-      "hideWordInSentence": "隐藏例句单词",
+      "displayMode": "拼写模式",
+      "hideWordInSentence": "隐藏拼写单词",
+      "hideWordInSentenceHint": "开启该功能，会自动隐藏例句中正在拼写的单词（包括该单词的变种）。",
       "showSentences": "显示例句",
       "showSentenceTranslation": "显示例句翻译"
     },

@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 10:02:44
- * @LastEditTime: 2025-11-10 08:43:03
+ * @LastEditTime: 2025-11-10 09:29:06
  * @Description: 单词拼写显示区域
  */
 'use client';
@@ -18,11 +18,12 @@ import {
   getVowelIndices,
 } from '@/utils/word.utils';
 import { SpeechOptions } from '@/utils/speech.utils';
-import { AccentType } from '@/types/word.types';
 import SentenceDisplay from '@/components/common/SentenceDisplay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useSettings } from '@/contexts/setting.context';
+import { AccentType } from '@/types/setting.types';
 
 const isInputtableChar = (char: string): boolean => {
   return /[a-zA-Z']/.test(char); // 字母 和 撇号
@@ -39,13 +40,12 @@ export default function WordDisplay() {
     speechSupported,
     incrementInputCount,
     incrementCorrectCount,
-    speechConfig,
-    displayMode,
     updateWordProgressInContext,
     setHasMadeMistake,
-    showSentences,
-    showSentenceTranslation,
   } = useSpelling();
+
+  const { speechConfig, displayMode, showSentences, showSentenceTranslation } =
+    useSettings();
 
   const { isLoggedIn } = useAppContext();
   const t = useTranslations('WordDisplay');

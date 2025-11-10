@@ -1,8 +1,9 @@
 /*
  * @Date: 2025-10-26 09:55:11
- * @LastEditTime: 2025-11-06 23:45:38
+ * @LastEditTime: 2025-11-10 10:03:04
  * @Description: 单词学习相关类型定义
  */
+import { DisplayMode } from './setting.types';
 
 /**
  * 单个发音项（包含音标和发音音频）
@@ -89,31 +90,6 @@ export interface Word {
 }
 
 /**
- * 口音类型（语音合成用）
- * 限定支持的语音口音选项
- */
-export type AccentType = 'en-US' | 'en-GB'; // 美式英语 / 英式英语
-
-/**
- * 语音性别类型（语音合成用）
- * 限定支持的语音性别选项
- */
-export type GenderType = 'auto' | 'male' | 'female'; // 自动 / 男性 / 女性
-
-/**
- * 语音合成配置
- * 控制单词/例句发音的参数（语言、语速、音量等）
- */
-export interface SpeechConfig {
-  lang: string; // 语言代码（如 'en-US' 对应美式英语）
-  rate: number; // 语速（范围 0.1-10，1 为正常速度）
-  volume: number; // 音量（范围 0-1，1 为最大音量）
-  pitch: number; // 音调（范围 0-2，1 为默认音调）
-  accent: AccentType; // 口音（美式/英式）
-  gender: GenderType; // 语音性别（自动/男性/女性）
-}
-
-/**
  * 学习统计数据
  * 记录单词学习过程中的关键指标（输入次数、正确率等）
  */
@@ -124,17 +100,6 @@ export interface Stats {
   masteredCount: number; // 已掌握的单词数
   accuracy: number; // 正确率（correctCount / inputCount，百分比或小数）
 }
-
-/**
- * 单词显示模式（拼写练习用）
- * 控制单词在练习中的隐藏/显示规则
- */
-export type DisplayMode =
-  | 'full' // 完全显示（无隐藏）
-  | 'hideVowels' // 隐藏元音字母（a/e/i/o/u）
-  | 'hideConsonants' // 隐藏辅音字母
-  | 'hideRandom' // 随机隐藏部分字母
-  | 'hideAll'; // 完全隐藏（全空白）
 
 /**
  * 导航回调函数类型
@@ -164,8 +129,6 @@ export interface SpellingContextType {
 }
 
 /**
- * [!! 建议新增 !!]
- * 简化的单词类型（用于API返回）
  * 描述：包含单词、释义和发音等核心信息
  */
 export interface SimpleWord {
