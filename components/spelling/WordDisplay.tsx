@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-10-26 10:02:44
- * @LastEditTime: 2025-11-10 09:29:06
+ * @LastEditTime: 2025-11-10 19:06:56
  * @Description: 单词拼写显示区域
  */
 'use client';
@@ -453,7 +453,8 @@ export default function WordDisplay() {
     playWordPronunciation(type);
   };
 
-  // --- JSX 返回 (修改) ---
+  if (!currentWord) return null;
+
   return (
     <div
       className="w-full flex flex-col items-center justify-center relative"
@@ -490,7 +491,7 @@ export default function WordDisplay() {
         speechSupported={!!speechSupported}
       />
 
-      <DefinitionDisplay definitions={currentWord?.definitions} />
+      <DefinitionDisplay definitions={currentWord.definitions} />
 
       {isLoggedIn ? (
         <>

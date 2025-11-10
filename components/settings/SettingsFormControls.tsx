@@ -142,7 +142,7 @@ export function SelectItem<T extends string>({
 interface ToggleItemProps {
   label: string;
   checked: boolean;
-  onChange: Dispatch<SetStateAction<boolean>>;
+  onChange: (newCheckedState: boolean) => void;
   disabled?: boolean;
   hint?: string; // 添加了 hint 属性
 }
@@ -170,7 +170,7 @@ export function ToggleItem({
           type="button"
           role="switch"
           aria-checked={checked}
-          onClick={() => onChange((prev) => !prev)}
+          onClick={() => onChange(!checked)}
           disabled={disabled}
           className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
             checked
