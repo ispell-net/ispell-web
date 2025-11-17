@@ -4,6 +4,8 @@
  * 层级关系：L1(语言) → L2(分类/系列) → L3(书单/词汇表)
  */
 
+import { SimpleWord } from '@/types/word.types'; // 假设 SimpleWord 在其他文件中定义
+
 /**
  * L3: 书单/词汇表（最底层，包含具体单词内容）
  * 描述：单本词汇书的核心信息，关联具体的单词列表
@@ -14,8 +16,9 @@ export interface Book {
   name: string; // 书籍名称（如"大学英语四级核心词汇"）
   totalWords: number; // 书籍包含的总单词数
   description: string | null; // 书籍描述（可选，介绍书籍特点、适用人群等）
-  tags: string[] | null; // [!! 新增 !!] 标签数组 (例如 ['四级', '六级'])
+  tags: string[] | null; // 标签数组 (例如 ['四级', '六级'])
   order: number;
+  // 移除 isEnglish 字段
 }
 
 /**
@@ -41,7 +44,6 @@ export interface Language {
   name: string; // 语言全称（如"英语"、"日语"）
   shortName: string; // 语言简称（如"英"、"日"，用于UI紧凑展示）
   categories: Category[]; // 该语言下的所有分类（L2层级集合）
-  
 }
 
 /**
@@ -90,4 +92,47 @@ export interface LearningPlan {
     reviewedTodayCount: number; // 今日已复习的单词数
     learnedTodayCount: number; // 今日已学习的新单词数
   };
+}
+
+// --- 社区/自定义词表相关类型 ---
+
+/**
+ * 单词校验结果
+ * 描述：用户上传单词列表后，系统返回已匹配和未匹配的单词信息
+ */
+export interface ValidationResult {
+  matchedWords: { id: number; text: string }[]; // 数据库中存在的单词 (包含ID)
+  unmatchedWords: string[]; // 数据库中不存在的单词 (仅文本)
+}
+
+/**
+ * 创建自定义词表的请求参数
+ */
+export interface CreateCustomWordListParams {
+  listName: string; // 词表名称
+  wordIds: number[]; // 包含的单词ID列表
+  isPublic: boolean; // 是否公开 (PUBLIC / HIDDEN)
+  languageCode: string; // 语言代码 (如 'en', 'zh')
+  description?: string; // 描述 (可选)
+}
+
+/**
+ * 修改自定义词表的参数 (不包含 wordIds 和 languageCode，因为它们在创建后锁定)
+ */
+export interface UpdateCustomWordListParams {
+  listCode: string; // 词表唯一编码
+  listName: string; // 新词表名称
+  isPublic: boolean; // 是否公开 (PUBLIC / HIDDEN)
+  description?: string; // 新描述 (可选)
+}
+
+/**
+ * 社区/用户词表列表项
+ * 描述：社区视图中展示的词表信息，包含状态和创建者信息
+ */
+export interface CommunityList extends Book {
+  status: 'PUBLIC' | 'HIDDEN'; // 词表状态
+  creatorId: number | null; // 创建者用户ID (null 表示官方/系统创建)
+  creatorNickname: string; // 创建者昵称 (或 '官方')
+  languageCode: string; // 新增 languageCode 字段
 }

@@ -81,6 +81,89 @@
     "BookCard": {
       "totalWords": "共 {count} 词"
     },
+    "CommunityView": {
+      "title": "社区",
+      "createCustomBook": "创建词汇书",
+      "userCreatedSection": "我创建的单词书",
+      "publicCommunitySection": "社区公开词表",
+      "noCommunityBooks": "暂无社区和自定义词表。",
+      "emptyUserList": "您还没有创建任何单词书。",
+      "createdByUser": "由用户 {name} 创建",
+      "byUserPrefix": "由 {name} 创建",
+      "deleteCustomBook": "删除自定义单词书",
+      "publicCannotEdit": "公开词表无法修改或删除",
+      "publicCannotEditShort": "公开无法编辑",
+      "deleteConfirm": "确定要删除《{bookName}》吗？"
+    },
+    "CreateCustomBookModal": {
+      "title": "创建自定义词表",
+      "titles": {
+        "edit": "修改我的词表信息"
+      },
+      "stepLabels": {
+        "upload": "上传/粘贴",
+        "validate": "单词校验",
+        "form": "填写信息"
+      },
+      "buttons": {
+        "uploadFile": "上传 .txt 文件",
+        "downloadExample": "下载示例 .txt"
+      },
+      "steps": {
+        "upload": {
+          "title": "输入单词列表",
+          "description": "您可以直接粘贴纯文本单词列表，每个单词用空格或换行符分隔。",
+          "placeholder": "输入您的单词列表...",
+          "wordCount": "当前 {count} 词（上限 {max} 词）",
+          "emptyWords": "请输入单词列表。"
+        },
+        "validate": {
+          "title": "校验结果",
+          "totalWords": "总导入单词：{count} 词",
+          "matched": "已匹配数据库：{count} 词",
+          "unmatched": "未匹配数据库：{count} 词",
+          "proceedMessage": "只有 {count} 个已匹配的单词会被加入您的词表。",
+          "noMatchError": "数据库中未匹配到任何单词，无法创建词表。",
+          "matchedDetails": "查看已匹配单词",
+          "unmatchedDetails": "查看未匹配单词"
+        },
+        "form": {
+          "title": "词表信息",
+          "matchedCount": "将创建包含 {count} 个单词的词表。",
+          "listName": "词表名称",
+          "namePlaceholder": "输入您的单词书名称",
+          "description": "描述 (可选)",
+          "descPlaceholder": "简短介绍这本单词书...",
+          "language": "词表语言",
+          "defaultName": "我的自定义词表",
+          "isPublic": "设为公开词表",
+          "publicDescCommunity": "公开后，其他用户可见并可学习，感谢您为社区做的贡献！",
+          "privateDesc": "私有词表仅您本人可见和可学习。",
+          "missingDetails": "请填写词表名称并确保有匹配的单词。"
+        }
+      },
+      "errors": {
+        "emptyWords": "请输入单词列表。",
+        "unsupportedFile": "文件格式不支持，请上传 .txt 文件。",
+        "fileReadFailed": "文件读取失败。",
+        "loadingLanguages": "正在加载语言...",
+        "noLanguageAvailable": "无法创建，系统暂无可用语言配置。",
+        "missingDetails": "请填写词表名称并确保有匹配的单词。"
+      },
+      "toast": {
+        "fileLoaded": "文件已加载！",
+        "validating": "正在校验单词...",
+        "validationFailed": "单词校验失败，请检查输入格式或网络。",
+        "creating": "正在创建词表...",
+        "creationFailed": "创建词表失败，请稍后重试。",
+        "updateSuccess": "词表信息更新成功！",
+        "updateFailed": "词表信息更新失败，请稍后重试。",
+        "createCustomListSuccess": "自定义词表创建成功！",
+        "deletingCustomList": "正在删除词表...",
+        "deleteCustomListSuccess": "自定义词表已删除",
+        "deleteCustomListError": "删除词表失败，请稍后重试"
+      }
+    },
     "LearningView": {
       "title": "在学",
       "currentActive": "当前激活",
@@ -159,8 +242,8 @@
       "customPlan": {
         "customDays": "自定义天数",
         "dailyWords": "每日单词",
-        "wordsPerDay": "计划: 约 {count} 词/天",
-        "totalDays": "计划: 约 {count} 天完成"
+        "wordsPerDay": "计划: {count} 词/天",
+        "totalDays": "计划: {count} 天完成"
       },
       "learningOrder": {
         "sequential": {
@@ -359,16 +442,24 @@
       "save": "保存",
       "cancel": "取消",
       "confirm": "确认",
+      "create": "创建",
       "delete": "删除",
       "edit": "编辑",
       "bind": "绑定",
       "unbind": "解除绑定",
-      "retry": "重试"
+      "retry": "重试",
+      "next": "下一步",
+      "back": "返回",
+      "modify": "修改"
     },
     "messages": {
       "noChangesToSave": "没有需要保存的更改",
       "operationSuccess": "操作成功",
       "operationFailed": "操作失败，请稍后再试"
+    },
+    "status": {
+      "public": "公开",
+      "private": "私有"
     },
     "aria": {
       "close": "关闭"
@@ -427,6 +518,8 @@
     "e4003": "请先完成今天的新学单词",
     "e4004": "请先完成今天的复习任务",
     "e4005": "您无权访问此计划",
+    "e4006": "自定义词表创建失败",
+    "e4007": "导入的单词列表为空",
 
     "e5000": "找不到该单词进度",
     "e5001": "您无权修改此单词进度",
@@ -718,15 +811,25 @@
       "list1": {
         "title": "获得您的明确同意后",
         "content": "在获得您的明确同意后，我们会与其他方共享您的个人信息。"
-      },
-      "list2": {
-        "title": "与授权合作伙伴共享",
-        "content": "仅为实现本政策中声明的目的，我们的某些服务将由授权合作伙伴提供（例如，腾讯云的短信和邮件服务）。我们仅会出于合法、正当、必要、特定、明确的目的共享您的信息，并且只会共享提供服务所必要的信息。"
-      },
-      "list3": {
-        "title": "法律法规要求",
-        "content": "根据法律、法规、法律程序的要求或政府主管部门的强制性要求，我们可能会对外共享您的个人信息。"
       }
+    },
+    "section8": {
+      "p1": "如果您对本隐私政策有任何疑问，请通过以下方式联系我们：",
+      "contactLabel": "电子邮件：",
+      "email": "privacy@ispell.com"
+    },
+    "section7": {
+      "title": "7. 政策变更",
+      "p1": "我们保留随时修改本政策的权利。修改后的政策将在本页面公布，并取代旧版本。我们建议您定期查看本政策。您在政策变更后继续使用本服务，即视为您接受修改后的政策。"
+    },
+    "section6": {
+      "title": "6. 儿童隐私",
+      "p1": "我们的服务主要面向成年人。如果没有父母或监护人的同意，儿童（我们认为是指 14 周岁以下的任何人）不应创建自己的用户账户。"
+    },
+    "section5": {
+      "title": "5. 信息存储与安全",
+      "p1": "我们已使用符合业界标准的安全防护措施保护您提供的个人信息，防止数据遭到未经授权的访问、公开披露、使用、修改、损坏或丢失。",
+      "p2": "例如，我们对您的**密码**使用 **Bcrypt 哈希加密** 进行单向加密存储，确保即使数据库泄露，您的原始密码也不会被获取。"
     },
     "section4": {
       "title": "4. 您的权利",
@@ -744,24 +847,29 @@
         "content": "您随时可以联系我们申请注销账户。在收到您的申请后，我们将停止为您提供服务，并删除您的个人信息或对其进行匿名化处理（法律法规另有规定的除外）。"
       }
     },
-    "section5": {
-      "title": "5. 信息存储与安全",
-      "p1": "我们已使用符合业界标准的安全防护措施保护您提供的个人信息，防止数据遭到未经授权的访问、公开披露、使用、修改、损坏或丢失。",
-      "p2": "例如，我们对您的**密码**使用 **Bcrypt 哈希加密** 进行单向加密存储，确保即使数据库泄露，您的原始密码也不会被获取。"
+    "section3": {
+      "list3": {
+        "title": "法律法规要求",
+        "content": "根据法律、法规、法律程序的要求或政府主管部门的强制性要求，我们可能会对外共享您的个人信息。"
+      },
+      "list2": {
+        "title": "与授权合作伙伴共享",
+        "content": "仅为实现本政策中声明的目的，我们的某些服务将由授权合作伙伴提供（例如，腾讯云的短信和邮件服务）。我们仅会出于合法、正当、必要、特定、明确的目的共享您的信息，并且只会共享提供服务所必要的信息。"
+      },
+      "list1": {
+        "title": "获得您的明确同意后",
+        "content": "在获得您的明确同意后，我们会与其他方共享您的个人信息。"
+      }
     },
-    "section6": {
-      "title": "6. 儿童隐私",
-      "p1": "我们的服务主要面向成年人。如果没有父母或监护人的同意，儿童（我们认为是指 14 周岁以下的任何人）不应创建自己的用户账户。"
+    "intro": {
+      "p1": "感谢您使用 iSpell (爱拼词)！我们深知个人信息对您的重要性，并会尽全力保护您的个人信息安全可靠。我们致力于维持您对我们的信任，恪守以下原则，保护您的个人信息：权责一致原则、目的明确原则、选择同意原则、最少够用原则、确保安全原则、主体参与原则、公开透明原则等。",
+      "p2": "本《隐私政策》（以下简称“本政策”）旨在说明我们如何收集、使用、存储和共享您的个人信息，以及您如何访问、更新、删除和保护这些信息。"
     },
-    "section7": {
-      "title": "7. 政策变更",
-      "p1": "我们保留随时修改本政策的权利。修改后的政策将在本页面公布，并取代旧版本。我们建议您定期查看本政策。您在政策变更后继续使用本服务，即视为您接受修改后的政策。"
-    },
-    "section8": {
-      "title": "8. 联系我们",
-      "p1": "如果您对本隐私政策有任何疑问，请通过以下方式联系我们：",
-      "contactLabel": "电子邮件：",
-      "email": "privacy@ispell.com"
+    "title": "隐私政策",
+    "lastUpdated": "最后更新于：{date}",
+    "metadata": {
+      "title": "隐私政策",
+      "description": "iSpell (爱拼词) 平台的隐私政策说明。"
     }
   },
   "Changelog": {

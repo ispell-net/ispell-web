@@ -1,19 +1,19 @@
 /*
  * @Date: 2025-11-04 20:17:42
- * @LastEditTime: 2025-11-09 19:13:30
+ * @LastEditTime: 2025-11-12 13:18:44
  * @Description: 书籍选择抽屉组件
  */
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star } from 'lucide-react';
+import { X, Star, Users } from 'lucide-react';
 import { useAppContext } from '@/contexts/app.context';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 
 // 类型定义
-import type { PlanDetails, LearningPlan } from '@/types/book.types';
+import type { PlanDetails, LearningPlan, Language } from '@/types/book.types'; // 导入 Language
 
 // 服务接口
 import {
@@ -23,6 +23,11 @@ import {
   activatePlan,
   getMistakeReviewWords,
 } from '@/services/planService';
+import {
+  getCommunityAndCustomLists,
+  deleteCustomWordList,
+  fetchAllLanguages, // 导入获取所有语言的函数
+} from '@/services/bookService';
 
 // 子组件
 import BrowserView from './BrowserView';
@@ -30,6 +35,8 @@ import LearningView from './LearningView';
 import ConfirmationModal from '../common/ConfirmationModal';
 import PlanWordsModal from './PlanWordsModal';
 import MistakeModal from './MistakeModal';
+import CommunityView from './CommunityView';
+import CreateCustomBookModal from './CreateCustomBookModal';
 
 // 确认弹窗状态类型：包含操作类型、计划ID和书籍名称
 type ModalState = {
@@ -77,7 +84,9 @@ const BookSelectionDrawer: React.FC = () => {
   } = useAppContext();
 
   // 内部状态管理
-  const [mainView, setMainView] = useState<'browser' | 'learning'>('browser'); // 主视图切换：浏览/学习中
+  const [mainView, setMainView] = useState<
+    'browser' | 'learning' | 'community'
+  >('browser'); // 主视图切换：浏览/学习中/社区
   const [previewBook, setPreviewBook] = useState<LearningPlan['book'] | null>(
     null
   ); // 预览的书籍信息
@@ -89,6 +98,10 @@ const BookSelectionDrawer: React.FC = () => {
     useState<PlanWordsModalState | null>(null); // 计划单词模态框状态
   const [mistakeModalState, setMistakeModalState] =
     useState<MistakeModalState | null>(null); // 错题集模态框状态
+
+  const [communityLists, setCommunityLists] = useState<any[]>([]); // 社区和用户创建的词表列表
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // 自定义词表创建模态框状态
+  const [allLanguages, setAllLanguages] = useState<Language[]>([]); // 数据库中的所有语言列表
 
   // 编程式导航标记与菜单引用
   const isProgrammaticNav = useRef(false);
@@ -114,6 +127,7 @@ const BookSelectionDrawer: React.FC = () => {
       setModalState(null);
       setPlanWordsModalState(null);
       setMistakeModalState(null);
+      setIsCreateModalOpen(false); // 重置创建模态框状态
     }, 300);
   };
 
@@ -315,6 +329,73 @@ const BookSelectionDrawer: React.FC = () => {
     setModalState(null);
   };
 
+  /**
+   * 获取社区和自定义词表
+   */
+  const fetchCommunityLists = useCallback(async () => {
+    try {
+      const lists = await getCommunityAndCustomLists();
+      setCommunityLists(lists);
+    } catch (err) {
+      console.error('获取社区词表失败:', err);
+      // toast.error(t('toast.fetchCommunityError'));
+    }
+  }, [setCommunityLists]);
+
+  /**
+   * 获取所有语言列表 (用于创建自定义词表)
+   */
+  const fetchLanguages = useCallback(async () => {
+    try {
+      // 复用 hierarchy 接口获取语言列表
+      const languages = await fetchAllLanguages();
+      setAllLanguages(languages);
+    } catch (err) {
+      console.error('获取语言列表失败:', err);
+    }
+  }, [setAllLanguages]);
+
+  /**
+   * 创建自定义词表成功后的回调
+   */
+  const handleCustomListCreated = async (newBookListCode: string) => {
+    setIsCreateModalOpen(false);
+    toast.success(t('CreateCustomBookModal.toast.createCustomListSuccess'));
+    // 刷新数据并切换到社区视图
+    await refreshAllData();
+    await fetchCommunityLists();
+    setMainView('community');
+  };
+
+  /**
+   * 删除自定义词表
+   */
+  const handleDeleteCustomList = async (listCode: string) => {
+    const listToDelete = communityLists.find((l) => l.listCode === listCode);
+    if (!listToDelete) return;
+
+    const confirmed = window.confirm(
+      t('CommunityView.deleteConfirm', { bookName: listToDelete.name })
+    );
+    if (!confirmed) return;
+
+    const loadingToastId = toast.loading(
+      t('CreateCustomBookModal.toast.deletingCustomList')
+    );
+    try {
+      // 调用服务层删除自定义词表 (软删除)
+      await deleteCustomWordList(listCode);
+      await refreshAllData();
+      await fetchCommunityLists();
+      toast.dismiss(loadingToastId);
+      toast.success(t('CreateCustomBookModal.toast.deleteCustomListSuccess'));
+    } catch (err) {
+      console.error('删除自定义词表失败:', err);
+      toast.dismiss(loadingToastId);
+      toast.error(t('CreateCustomBookModal.toast.deleteCustomListError'));
+    }
+  };
+
   // 派生数据：当前语言包、系列列表、书籍列表
   const currentLanguagePack = hierarchy.find(
     (lang) => lang.code === activeLangCode
@@ -336,6 +417,7 @@ const BookSelectionDrawer: React.FC = () => {
       return;
     }
     if (mainView === 'browser') {
+      // 仅在浏览器视图下执行
       const currentLang = hierarchy.find(
         (lang) => lang.code === activeLangCode
       );
@@ -347,7 +429,7 @@ const BookSelectionDrawer: React.FC = () => {
     }
     setPreviewBook(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLangCode, hierarchy]);
+  }, [activeLangCode, hierarchy, mainView]);
 
   /**
    * 系列切换时重置书籍预览
@@ -361,24 +443,7 @@ const BookSelectionDrawer: React.FC = () => {
   }, [activeSeriesId]);
 
   /**
-   * 根据登录状态和学习列表自动切换视图
-   * 登录且有学习计划时默认显示学习视图，否则显示浏览视图
-   */
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setMainView('browser');
-      return;
-    }
-    if (learningList.length > 0 && !isProgrammaticNav.current) {
-      setMainView('learning');
-    } else if (learningList.length === 0) {
-      setMainView('browser');
-    }
-  }, [hierarchy, learningList, isLoggedIn]);
-
-  /**
    * 点击外部关闭操作菜单
-   * 监听全局点击事件，点击菜单外部时关闭菜单
    */
   useEffect(() => {
     if (!openMenu) return;
@@ -392,28 +457,36 @@ const BookSelectionDrawer: React.FC = () => {
   }, [openMenu]);
 
   /**
-   * 初始化视图状态
-   * 组件挂载时设置默认语言和系列，根据学习列表状态切换初始视图
+   * [ 修复导航Bug ] 抽屉打开时的副作用
    */
   useEffect(() => {
-    if (hierarchy.length > 0) {
-      setActiveLangCode(hierarchy[0].code);
-      if (hierarchy[0].categories.length > 0) {
-        setActiveSeriesId(hierarchy[0].categories[0].id.toString());
-      } else {
-        setActiveSeriesId('');
+    if (isBookDrawerOpen) {
+      // 1. 获取社区列表和语言列表
+      fetchCommunityLists();
+      fetchLanguages();
+
+      // 2. 初始化默认语言（如果尚未设置）
+      if (hierarchy.length > 0 && !activeLangCode) {
+        setActiveLangCode(hierarchy[0].code);
+        if (hierarchy[0].categories.length > 0) {
+          setActiveSeriesId(hierarchy[0].categories[0].id.toString());
+        } else {
+          setActiveSeriesId('');
+        }
       }
-    } else {
-      setActiveLangCode('');
-      setActiveSeriesId('');
-    }
-    if (learningList.length > 0 && !isProgrammaticNav.current && isLoggedIn) {
-      setMainView('learning');
-    } else if (learningList.length === 0 || !isLoggedIn) {
-      setMainView('browser');
+
+      // 3. 根据学习列表决定默认视图 (修复：确保只有在 isBookDrawerOpen 且满足条件时才设置)
+      // 这里的逻辑修复了导航卡死：只有在没有明确切换到 'community' 且存在学习计划时，才默认停留在 'learning'
+      if (learningList.length > 0 && isLoggedIn) {
+        if (mainView === 'browser') {
+          setMainView('learning');
+        }
+      } else {
+        setMainView('browser');
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hierarchy, learningList, isLoggedIn]);
+  }, [isBookDrawerOpen, hierarchy, learningList, isLoggedIn]);
 
   return (
     <AnimatePresence>
@@ -464,7 +537,10 @@ const BookSelectionDrawer: React.FC = () => {
                       {/* 学习视图导航项 */}
                       <li className="w-full">
                         <button
-                          onClick={() => setMainView('learning')}
+                          onClick={() => {
+                            setMainView('learning');
+                            setPreviewBook(null); // 确保切换视图时关闭预览
+                          }}
                           className={`flex flex-col items-center justify-center w-full h-16 rounded-lg transition-colors ${
                             mainView === 'learning'
                               ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
@@ -479,6 +555,29 @@ const BookSelectionDrawer: React.FC = () => {
                           </span>
                         </button>
                       </li>
+
+                      {/* 社区视图导航项 */}
+                      <li className="w-full">
+                        <button
+                          onClick={() => {
+                            setMainView('community');
+                            setPreviewBook(null); // 确保切换视图时关闭预览
+                          }}
+                          className={`flex flex-col items-center justify-center w-full h-16 rounded-lg transition-colors ${
+                            mainView === 'community'
+                              ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                              : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                          }`}
+                          role="tab"
+                          aria-selected={mainView === 'community'}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span className="text-xs mt-1">
+                            {t('CommunityView.title')}
+                          </span>
+                        </button>
+                      </li>
+
                       <li className="w-full px-2">
                         <hr className="border-gray-200 dark:border-gray-700" />
                       </li>
@@ -492,6 +591,7 @@ const BookSelectionDrawer: React.FC = () => {
                         onClick={() => {
                           setMainView('browser');
                           setActiveLangCode(lang.code);
+                          setPreviewBook(null); // 确保切换视图时关闭预览
                         }}
                         className={`flex flex-col items-center justify-center w-full h-16 rounded-lg transition-colors ${
                           mainView === 'browser' && activeLangCode === lang.code
@@ -546,7 +646,7 @@ const BookSelectionDrawer: React.FC = () => {
                         setPreviewBook={setPreviewBook}
                         learningList={learningList}
                       />
-                    ) : (
+                    ) : mainView === 'learning' ? (
                       <LearningView
                         learningList={learningList}
                         currentBookId={currentBookId}
@@ -563,6 +663,19 @@ const BookSelectionDrawer: React.FC = () => {
                         handleUpdatePlan={handleUpdatePlan}
                         handleViewPlanWords={openPlanWordsModal}
                         handleViewMistakes={openMistakeModal}
+                      />
+                    ) : (
+                      <CommunityView
+                        communityLists={communityLists}
+                        previewBook={previewBook}
+                        handleBookCardClick={handleBookCardClick}
+                        handleStartLearning={handleStartLearning}
+                        setPreviewBook={setPreviewBook}
+                        learningList={learningList}
+                        handleCreateCustomList={() =>
+                          setIsCreateModalOpen(true)
+                        }
+                        handleDeleteCustomList={handleDeleteCustomList}
                       />
                     )}
                   </AnimatePresence>
@@ -616,6 +729,14 @@ const BookSelectionDrawer: React.FC = () => {
               bookName={mistakeModalState?.bookName}
               onClose={() => setMistakeModalState(null)}
               onStartReview={handleStartMistakeReview}
+            />
+
+            {/* 创建自定义词表模态框 (传递 allLanguages) */}
+            <CreateCustomBookModal
+              isOpen={isCreateModalOpen}
+              onClose={() => setIsCreateModalOpen(false)}
+              onSuccess={handleCustomListCreated}
+              languages={allLanguages}
             />
           </motion.div>
         </>
