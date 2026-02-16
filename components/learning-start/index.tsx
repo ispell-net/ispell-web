@@ -1,6 +1,6 @@
 /*
  * @Date: 2025-11-06 05:00:00
- * @LastEditTime: 2025-11-08 23:05:30
+ * @LastEditTime: 2026-02-16 20:26:31
  * @Description: 学习启动页组件，展示当前选中书籍的学习进度
  */
 'use client';
@@ -55,7 +55,7 @@ const LearningStart: React.FC = () => {
    * 使用模拟单词数据开启学习会话
    */
   const handleStartDemo = () => {
-    startMistakeReview(0, DEMO_WORDS as Word[]);
+    startMistakeReview(0, DEMO_WORDS as unknown as Word[]);
   };
 
   // 未选择书籍或无进度信息时的展示
