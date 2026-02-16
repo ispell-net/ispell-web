@@ -103,7 +103,7 @@ const LearningStart: React.FC = () => {
    * 使用模拟单词数据开启学习会话
    */
   const handleStartDemo = () => {
-    startMistakeReview(0, DEMO_WORDS);
+    startMistakeReview(0, DEMO_WORDS as Word[]);
   };
 
   // 未选择书籍或无进度信息时的展示
