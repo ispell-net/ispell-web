@@ -15,7 +15,48 @@ import { LearningPlan } from '@/types/book.types';
 import { Word } from '@/types/word.types';
 import { advancePlan } from '@/services/planService';
 
-import DEMO_WORDS from '@/mocks/word.json';
+/** 未登录用户「立即体验」使用的演示单词数据 */
+const DEMO_WORDS: Word[] = [
+  {
+    progressId: 1,
+    id: 1,
+    pronunciation: { uk: { phonetic: '/heləʊ/' }, us: { phonetic: '/heˈloʊ/' } },
+    definitions: { 'int.': [{ translation: '喂；你好' }] },
+    examples: {
+      general: [
+        { cn: '你好，请问有什么可以帮您？', en: 'Hello, how can I help you?', en_highlighted: 'Hello, how can I help you?' },
+      ],
+    },
+    relations: {},
+    text: 'hello',
+  },
+  {
+    progressId: 2,
+    id: 2,
+    pronunciation: { uk: { phonetic: '/ˈwɜːd/' }, us: { phonetic: '/wɜːrd/' } },
+    definitions: { 'n.': [{ translation: '词；单词；话' }] },
+    examples: {
+      general: [
+        { cn: '这个词很难拼写。', en: 'This word is difficult to spell.', en_highlighted: 'This word is difficult to spell.' },
+      ],
+    },
+    relations: {},
+    text: 'word',
+  },
+  {
+    progressId: 3,
+    id: 3,
+    pronunciation: { uk: { phonetic: '/ˈpræktɪs/' }, us: { phonetic: '/ˈpræktɪs/' } },
+    definitions: { 'n.': [{ translation: '练习；实践' }], 'v.': [{ translation: '练习；实践' }] },
+    examples: {
+      general: [
+        { cn: '熟能生巧。', en: 'Practice makes perfect.', en_highlighted: 'Practice makes perfect.' },
+      ],
+    },
+    relations: {},
+    text: 'practice',
+  },
+];
 
 /**
  * 学习启动页组件
@@ -55,7 +96,7 @@ const LearningStart: React.FC = () => {
    * 使用模拟单词数据开启学习会话
    */
   const handleStartDemo = () => {
-    startMistakeReview(0, DEMO_WORDS as unknown as Word[]);
+    startMistakeReview(0, DEMO_WORDS);
   };
 
   // 未选择书籍或无进度信息时的展示
